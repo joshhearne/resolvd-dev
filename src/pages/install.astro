@@ -290,13 +290,9 @@ import Layout from "../layouts/Layout.astro";
     if (s.emailType !== "none") {
       blank();
       lines.push("# ── Email ──");
-      add("MAIL_FROM", s.mailFrom || "noreply@example.com");
-      add("MAIL_BACKEND", s.emailType);
-      if (s.emailType === "smtp") {
-        add("SMTP_HOST", s.smtpHost || "smtp.example.com");
-        add("SMTP_PORT", s.smtpPort);
-        add("SMTP_USER", s.smtpUser || "<smtp-user>");
-        add("SMTP_PASSWORD", s.smtpPass || "<smtp-password>");
+      lines.push(`# Pick the backend (${s.emailType}) at runtime under Admin → Authentication → Email.`);
+      if (s.emailType === "graph") {
+        add("MAIL_FROM", s.mailFrom || "noreply@example.com");
       }
     }
     return lines.join("\n") + "\n";
@@ -462,7 +458,8 @@ docker compose up -d --build
 docker compose logs -f
 ${tlsHint}
 # 5. Visit ${s.frontendUrl}
-#    First user to sign up becomes Admin.
+#    Login page shows a Create Admin Account form on first boot.
+#    The account you create there becomes Admin. Invite the rest from Admin → Users.
 `;
   }
 

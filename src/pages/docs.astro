@@ -15,6 +15,7 @@ import Layout from "../layouts/Layout.astro";
       <!-- env vars -->
       <article>
         <h2 class="text-2xl font-bold mb-4">Environment Variables</h2>
+        <p class="mb-4 text-sm text-[var(--color-fg-muted)]">Email backend (Graph / Gmail / SMTP) and SMTP credentials are configured at runtime in <strong class="text-white">Admin → Authentication → Email</strong>, not via env. Same for Entra/Google enable toggles — env vars below only supply the credentials.</p>
         <div class="overflow-x-auto rounded-xl border border-[var(--color-border)]">
           <table class="w-full text-sm">
             <thead class="bg-[var(--color-surface-2)] text-left text-xs uppercase tracking-wide text-[var(--color-fg-muted)]">
@@ -28,15 +29,15 @@ import Layout from "../layouts/Layout.astro";
               <tr><td class="px-4 py-2 font-mono text-[var(--color-brand)]">PORT</td><td class="px-4 py-2">no</td><td class="px-4 py-2 font-mono">3001</td><td class="px-4 py-2 text-[var(--color-fg-muted)]">Backend port (internal)</td></tr>
               <tr><td class="px-4 py-2 font-mono text-[var(--color-brand)]">APP_INTERNAL_PORT</td><td class="px-4 py-2">no</td><td class="px-4 py-2 font-mono">8090</td><td class="px-4 py-2 text-[var(--color-fg-muted)]">Bound on <code>127.0.0.1</code></td></tr>
               <tr><td class="px-4 py-2 font-mono text-[var(--color-brand)]">UPLOADS_DIR</td><td class="px-4 py-2">no</td><td class="px-4 py-2 font-mono">/data/uploads</td><td class="px-4 py-2 text-[var(--color-fg-muted)]">In-container path</td></tr>
-              <tr><td class="px-4 py-2 font-mono text-[var(--color-brand)]">MAX_UPLOAD_MB</td><td class="px-4 py-2">no</td><td class="px-4 py-2 font-mono">10</td><td class="px-4 py-2 text-[var(--color-fg-muted)]">Per-attachment limit</td></tr>
+              <tr><td class="px-4 py-2 font-mono text-[var(--color-brand)]">MAX_UPLOAD_MB</td><td class="px-4 py-2">no</td><td class="px-4 py-2 font-mono">50</td><td class="px-4 py-2 text-[var(--color-fg-muted)]">Per-attachment limit</td></tr>
+              <tr><td class="px-4 py-2 font-mono text-[var(--color-brand)]">COMPOSE_PROJECT_NAME</td><td class="px-4 py-2">no</td><td class="px-4 py-2 text-[var(--color-fg-dim)]">dir name</td><td class="px-4 py-2 text-[var(--color-fg-muted)]">Pin volume prefix when renaming the install directory</td></tr>
               <tr><td class="px-4 py-2 font-mono">AZURE_TENANT_ID</td><td class="px-4 py-2">opt</td><td class="px-4 py-2 text-[var(--color-fg-dim)]">—</td><td class="px-4 py-2 text-[var(--color-fg-muted)]">Entra tenant</td></tr>
               <tr><td class="px-4 py-2 font-mono">AZURE_CLIENT_ID</td><td class="px-4 py-2">opt</td><td class="px-4 py-2 text-[var(--color-fg-dim)]">—</td><td class="px-4 py-2 text-[var(--color-fg-muted)]">Entra app ID</td></tr>
               <tr><td class="px-4 py-2 font-mono">AZURE_CLIENT_SECRET</td><td class="px-4 py-2">opt</td><td class="px-4 py-2 text-[var(--color-fg-dim)]">—</td><td class="px-4 py-2 text-[var(--color-fg-muted)]">Entra client secret</td></tr>
               <tr><td class="px-4 py-2 font-mono">AZURE_REDIRECT_URI</td><td class="px-4 py-2">opt</td><td class="px-4 py-2 text-[var(--color-fg-dim)]">—</td><td class="px-4 py-2 text-[var(--color-fg-muted)]">Must match App Registration</td></tr>
               <tr><td class="px-4 py-2 font-mono">GOOGLE_CLIENT_ID</td><td class="px-4 py-2">opt</td><td class="px-4 py-2 text-[var(--color-fg-dim)]">—</td><td class="px-4 py-2 text-[var(--color-fg-muted)]">Google OAuth client</td></tr>
               <tr><td class="px-4 py-2 font-mono">GOOGLE_CLIENT_SECRET</td><td class="px-4 py-2">opt</td><td class="px-4 py-2 text-[var(--color-fg-dim)]">—</td><td class="px-4 py-2 text-[var(--color-fg-muted)]">Google OAuth secret</td></tr>
-              <tr><td class="px-4 py-2 font-mono">MAIL_FROM</td><td class="px-4 py-2">opt</td><td class="px-4 py-2 text-[var(--color-fg-dim)]">—</td><td class="px-4 py-2 text-[var(--color-fg-muted)]">Sender address</td></tr>
-              <tr><td class="px-4 py-2 font-mono">MAIL_BACKEND</td><td class="px-4 py-2">opt</td><td class="px-4 py-2 font-mono">graph</td><td class="px-4 py-2 text-[var(--color-fg-muted)]"><code>graph</code> | <code>gmail</code> | <code>smtp</code></td></tr>
+              <tr><td class="px-4 py-2 font-mono">MAIL_FROM</td><td class="px-4 py-2">opt</td><td class="px-4 py-2 text-[var(--color-fg-dim)]">—</td><td class="px-4 py-2 text-[var(--color-fg-muted)]">Sender address (Graph backend only)</td></tr>
             </tbody>
           </table>
         </div>

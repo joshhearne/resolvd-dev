@@ -52,6 +52,9 @@ import Layout from "../layouts/Layout.astro";
         <p class="mt-3 text-sm text-[var(--color-fg-muted)]">You need two: a Postgres password and a session secret. Both 32+ chars.</p>
         <pre class="code-block mt-4"><span class="k">openssl</span> rand -hex 32  <span class="c"># SESSION_SECRET</span>
 <span class="k">openssl</span> rand -base64 32  <span class="c"># POSTGRES_PASSWORD</span></pre>
+        <p class="mt-4 text-sm text-[var(--color-fg-muted)]">Also set <code>FRONTEND_URL</code> to your public base URL and <code>COOKIE_SECURE=true</code> when serving over HTTPS (always, in prod). The shipped <code>.env.example</code> is missing <code>COOKIE_SECURE</code> — add it explicitly:</p>
+        <pre class="code-block mt-2" is:raw>FRONTEND_URL=https://yourdomain.com
+COOKIE_SECURE=true</pre>
       </article>
 
       <!-- Step 3 -->
@@ -69,7 +72,7 @@ import Layout from "../layouts/Layout.astro";
             <span class="ml-auto text-xs text-[var(--color-fg-dim)]">Easiest</span>
           </summary>
           <div class="px-4 pb-4 pt-2 text-sm text-[var(--color-fg-muted)] space-y-2">
-            <p>Nothing to configure. Sign up at <code>/signup</code> after first boot — first account becomes Admin.</p>
+            <p>Nothing to configure. After first boot, the login page shows a <strong class="text-white">Create Admin Account</strong> form — the first account created there becomes Admin. Subsequent users are invited from Admin → Users.</p>
           </div>
         </details>
 
@@ -123,33 +126,27 @@ GOOGLE_REDIRECT_URI=https://yourdomain.com/auth/google/callback</pre>
         </header>
         <p class="mt-3 text-sm text-[var(--color-fg-muted)]">Optional. Skip entirely if you don't want notifications.</p>
 
+        <p class="mt-3 text-sm text-[var(--color-fg-muted)]">Pick the backend after first boot in <strong class="text-white">Admin → Authentication → Email</strong>. The SMTP host/credentials live in the database, not <code>.env</code>.</p>
+
         <details class="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)]">
           <summary class="flex items-center gap-2 px-4 py-3 hover:bg-[var(--color-bg)]"><span class="chev text-[var(--color-brand)]">▸</span><span class="font-medium">Microsoft Graph</span><span class="ml-auto text-xs text-[var(--color-fg-dim)]">Reuses Entra app</span></summary>
           <div class="px-4 pb-4 pt-2 text-sm text-[var(--color-fg-muted)] space-y-2">
-            <p>Add <code>Mail.Send</code> application permission to your Entra app, then grant admin consent.</p>
-            <pre class="code-block" is:raw>MAIL_BACKEND=graph
-MAIL_FROM=noreply@yourdomain.com</pre>
+            <p>Add <code>Mail.Send</code> application permission to your Entra app, then grant admin consent. The only env var needed is the sender address:</p>
+            <pre class="code-block" is:raw>MAIL_FROM=noreply@yourdomain.com</pre>
           </div>
         </details>
 
         <details class="mt-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)]">
           <summary class="flex items-center gap-2 px-4 py-3 hover:bg-[var(--color-bg)]"><span class="chev text-[var(--color-brand)]">▸</span><span class="font-medium">Gmail API</span><span class="ml-auto text-xs text-[var(--color-fg-dim)]">Reuses Google app</span></summary>
           <div class="px-4 pb-4 pt-2 text-sm text-[var(--color-fg-muted)] space-y-2">
-            <p>Enable Gmail API in your Google Cloud project. Add <code>gmail.send</code> scope.</p>
-            <pre class="code-block" is:raw>MAIL_BACKEND=gmail
-MAIL_FROM=noreply@yourdomain.com</pre>
+            <p>Enable Gmail API in your Google Cloud project. Add <code>gmail.send</code> scope. Sender + service-account JSON are configured in Admin → Authentication → Email.</p>
           </div>
         </details>
 
         <details class="mt-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)]">
           <summary class="flex items-center gap-2 px-4 py-3 hover:bg-[var(--color-bg)]"><span class="chev text-[var(--color-brand)]">▸</span><span class="font-medium">SMTP</span><span class="ml-auto text-xs text-[var(--color-fg-dim)]">Postmark, SendGrid, etc.</span></summary>
           <div class="px-4 pb-4 pt-2 text-sm text-[var(--color-fg-muted)] space-y-2">
-            <pre class="code-block" is:raw>MAIL_BACKEND=smtp
-MAIL_FROM=noreply@yourdomain.com
-SMTP_HOST=smtp.postmarkapp.com
-SMTP_PORT=587
-SMTP_USER=...
-SMTP_PASSWORD=...</pre>
+            <p>Drop host, port, user, password into Admin → Authentication → Email. No env vars required.</p>
           </div>
         </details>
       </article>
@@ -211,6 +208,18 @@ server {
         </details>
 
         <details class="mt-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)]">
+          <summary class="flex items-center gap-2 px-4 py-3 hover:bg-[var(--color-bg)]"><span class="chev text-[var(--color-brand)]">▸</span><span class="font-medium">Cloudflare Origin Cert + nginx</span><span class="ml-auto text-xs text-[var(--color-fg-dim)]">If you proxy via Cloudflare</span></summary>
+          <div class="px-4 pb-4 pt-2 text-sm text-[var(--color-fg-muted)] space-y-2">
+            <p>If your domain is already on Cloudflare with proxy enabled, generate an Origin Certificate in the Cloudflare dashboard (SSL/TLS → Origin Server) and use the ready-to-use config shipped with the repo at <code>nginx/host-proxy.conf</code>:</p>
+            <pre class="code-block" is:raw><span class="k">sudo</span> cp nginx/host-proxy.conf /etc/nginx/sites-available/resolvd
+<span class="c"># Drop your origin cert + key into /etc/nginx/cloudflare/</span>
+<span class="k">sudo</span> ln -s /etc/nginx/sites-available/resolvd /etc/nginx/sites-enabled/
+<span class="k">sudo</span> nginx -t && sudo systemctl reload nginx</pre>
+            <p>Set Cloudflare SSL/TLS mode to <strong class="text-white">Full (strict)</strong>.</p>
+          </div>
+        </details>
+
+        <details class="mt-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)]">
           <summary class="flex items-center gap-2 px-4 py-3 hover:bg-[var(--color-bg)]"><span class="chev text-[var(--color-brand)]">▸</span><span class="font-medium">Cloudflare Tunnel</span><span class="ml-auto text-xs text-[var(--color-fg-dim)]">No open ports</span></summary>
           <div class="px-4 pb-4 pt-2 text-sm text-[var(--color-fg-muted)] space-y-2">
             <pre class="code-block" is:raw><span class="k">cloudflared</span> tunnel login
@@ -249,7 +258,7 @@ ingress:
         </header>
         <ol class="mt-3 space-y-2 text-sm text-[var(--color-fg-muted)] list-decimal list-inside">
           <li>Visit <code>https://yourdomain.com</code>.</li>
-          <li>Sign up — first account becomes Admin automatically.</li>
+          <li>Login page shows <strong class="text-white">Create Admin Account</strong> form — first account becomes Admin.</li>
           <li>Admin → Authentication: enable Entra/Google if you configured them.</li>
           <li>Admin → Branding: upload logo, set color, change site name.</li>
           <li>Admin → Users: invite your team, set roles.</li>
@@ -271,7 +280,8 @@ ingress:
 <span class="c"># Uploads (rsync or tar the volume)</span>
 <span class="k">docker</span> run --rm -v resolvd_uploads-data:/src -v $(pwd):/dst \
   alpine tar czf /dst/uploads-$(date +%F).tar.gz -C /src .</pre>
-        <p class="mt-3 text-sm text-[var(--color-fg-muted)]">Cron both nightly. Ship to S3/B2/wherever.</p>
+        <p class="mt-3 text-sm text-[var(--color-fg-muted)]">Volume prefix is the Compose project name (default: install directory name). Legacy installs may use <code>issues_*</code> instead of <code>resolvd_*</code> — check with <code>docker volume ls</code>. Pin it across renames by setting <code>COMPOSE_PROJECT_NAME</code>.</p>
+        <p class="mt-2 text-sm text-[var(--color-fg-muted)]">Cron both nightly. Ship to S3/B2/wherever.</p>
       </article>
 
       <div class="text-center pt-6">
