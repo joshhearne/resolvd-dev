@@ -72,7 +72,7 @@ COOKIE_SECURE=true</pre>
             <span class="ml-auto text-xs text-[var(--color-fg-dim)]">Easiest</span>
           </summary>
           <div class="px-4 pb-4 pt-2 text-sm text-[var(--color-fg-muted)] space-y-2">
-            <p>Nothing to configure. After first boot, the login page shows a <strong class="text-white">Create Admin Account</strong> form — the first account created there becomes Admin. Subsequent users are invited from Admin → Users.</p>
+            <p>Nothing to configure. After first boot, the login page shows a <strong class="text-[var(--color-fg-strong)]">Create Admin Account</strong> form — the first account created there becomes Admin. Subsequent users are invited from Admin → Users.</p>
           </div>
         </details>
 
@@ -126,7 +126,7 @@ GOOGLE_REDIRECT_URI=https://yourdomain.com/auth/google/callback</pre>
         </header>
         <p class="mt-3 text-sm text-[var(--color-fg-muted)]">Optional. Skip entirely if you don't want notifications.</p>
 
-        <p class="mt-3 text-sm text-[var(--color-fg-muted)]">Pick the backend after first boot in <strong class="text-white">Admin → Authentication → Email</strong>. The SMTP host/credentials live in the database, not <code>.env</code>.</p>
+        <p class="mt-3 text-sm text-[var(--color-fg-muted)]">Pick the backend after first boot in <strong class="text-[var(--color-fg-strong)]">Admin → Authentication → Email</strong>. The SMTP host/credentials live in the database, not <code>.env</code>.</p>
 
         <details class="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)]">
           <summary class="flex items-center gap-2 px-4 py-3 hover:bg-[var(--color-bg)]"><span class="chev text-[var(--color-brand)]">▸</span><span class="font-medium">Microsoft Graph</span><span class="ml-auto text-xs text-[var(--color-fg-dim)]">Reuses Entra app</span></summary>
@@ -215,7 +215,7 @@ server {
 <span class="c"># Drop your origin cert + key into /etc/nginx/cloudflare/</span>
 <span class="k">sudo</span> ln -s /etc/nginx/sites-available/resolvd /etc/nginx/sites-enabled/
 <span class="k">sudo</span> nginx -t && sudo systemctl reload nginx</pre>
-            <p>Set Cloudflare SSL/TLS mode to <strong class="text-white">Full (strict)</strong>.</p>
+            <p>Set Cloudflare SSL/TLS mode to <strong class="text-[var(--color-fg-strong)]">Full (strict)</strong>.</p>
           </div>
         </details>
 
@@ -258,7 +258,7 @@ ingress:
         </header>
         <ol class="mt-3 space-y-2 text-sm text-[var(--color-fg-muted)] list-decimal list-inside">
           <li>Visit <code>https://yourdomain.com</code>.</li>
-          <li>Login page shows <strong class="text-white">Create Admin Account</strong> form — first account becomes Admin.</li>
+          <li>Login page shows <strong class="text-[var(--color-fg-strong)]">Create Admin Account</strong> form — first account becomes Admin.</li>
           <li>Admin → Authentication: enable Entra/Google if you configured them.</li>
           <li>Admin → Branding: upload logo, set color, change site name.</li>
           <li>Admin → Users: invite your team, set roles.</li>

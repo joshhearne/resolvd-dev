@@ -65,7 +65,7 @@ const features = [
             Configure your install
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
           </a>
-          <a href="/manual/" class="inline-flex items-center justify-center rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--color-surface-2)] transition">
+          <a href="/manual/" class="inline-flex items-center justify-center rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-5 py-3 text-sm font-semibold text-[var(--color-fg-strong)] hover:bg-[var(--color-surface-2)] transition">
             Manual setup guide
           </a>
         </div>
@@ -78,7 +78,7 @@ const features = [
         </div>
       </div>
     </div>
-    <div class="pointer-events-none absolute inset-x-0 top-0 h-[600px] -z-10 opacity-[0.04]" style="background-image: linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px); background-size: 32px 32px;"></div>
+    <div class="pointer-events-none absolute inset-x-0 top-0 h-[600px] -z-10 opacity-[0.04]" style="background-image: linear-gradient(to right, var(--color-fg-strong) 1px, transparent 1px), linear-gradient(to bottom, var(--color-fg-strong) 1px, transparent 1px); background-size: 32px 32px;"></div>
   </section>
 
   <section class="border-t border-[var(--color-border)]">
@@ -91,7 +91,7 @@ const features = [
         {features.map(f => (
           <div class="group rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 hover:border-[var(--color-border-strong)] hover:bg-[var(--color-surface-2)] transition">
             <div class="text-2xl mb-3">{f.icon}</div>
-            <h3 class="font-semibold text-white mb-1.5">{f.title}</h3>
+            <h3 class="font-semibold text-[var(--color-fg-strong)] mb-1.5">{f.title}</h3>
             <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed">{f.body}</p>
           </div>
         ))}
@@ -106,10 +106,10 @@ const features = [
           <h2 class="text-3xl md:text-4xl font-bold tracking-tight">Boring stack. <span class="text-[var(--color-brand)]">On purpose.</span></h2>
           <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">No bespoke runtimes, no exotic databases, no proprietary protocols. Components you already know how to operate, monitor, and back up.</p>
           <ul class="mt-6 space-y-3 text-sm">
-            <li class="flex gap-3"><span class="text-[var(--color-brand)] font-mono">→</span><span><strong class="text-white">Postgres 16</strong> for everything: tickets, sessions, branding config. <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">pg_dump</code> is your full backup.</span></li>
-            <li class="flex gap-3"><span class="text-[var(--color-brand)] font-mono">→</span><span><strong class="text-white">Node + Express</strong> backend. Argon2 hashing, express-session, Multer uploads.</span></li>
-            <li class="flex gap-3"><span class="text-[var(--color-brand)] font-mono">→</span><span><strong class="text-white">React + Vite + Tailwind</strong> frontend, served by nginx in a 30 MB Alpine image.</span></li>
-            <li class="flex gap-3"><span class="text-[var(--color-brand)] font-mono">→</span><span><strong class="text-white">Bring your own TLS</strong> — Caddy, nginx, Cloudflare Tunnel, whatever you already run.</span></li>
+            <li class="flex gap-3"><span class="text-[var(--color-brand)] font-mono">→</span><span><strong class="text-[var(--color-fg-strong)]">Postgres 16</strong> for everything: tickets, sessions, branding config. <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">pg_dump</code> is your full backup.</span></li>
+            <li class="flex gap-3"><span class="text-[var(--color-brand)] font-mono">→</span><span><strong class="text-[var(--color-fg-strong)]">Node + Express</strong> backend. Argon2 hashing, express-session, Multer uploads.</span></li>
+            <li class="flex gap-3"><span class="text-[var(--color-brand)] font-mono">→</span><span><strong class="text-[var(--color-fg-strong)]">React + Vite + Tailwind</strong> frontend, served by nginx in a 30 MB Alpine image.</span></li>
+            <li class="flex gap-3"><span class="text-[var(--color-brand)] font-mono">→</span><span><strong class="text-[var(--color-fg-strong)]">Bring your own TLS</strong> — Caddy, nginx, Cloudflare Tunnel, whatever you already run.</span></li>
           </ul>
         </div>
         <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-1">

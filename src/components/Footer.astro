@@ -2,17 +2,33 @@
 ---
 
 <footer class="mt-32 border-t border-[var(--color-border)] py-10">
-  <div class="mx-auto max-w-6xl px-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 text-sm text-[var(--color-fg-muted)]">
-    <div class="flex items-center gap-3">
-      <img src="/icon.svg" alt="" width="24" height="24" class="rounded-md" />
-      <span>Resolvd — self-hosted issue tracking</span>
+  <div class="mx-auto max-w-6xl px-6 flex flex-col gap-8 text-sm text-[var(--color-fg-muted)]">
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <img src="/icon.svg" alt="" width="24" height="24" class="rounded-md" />
+        <span>Resolvd — self-hosted issue tracking</span>
+      </div>
+      <div class="flex items-center gap-5">
+        <a href="/install/" class="hover:text-[var(--color-fg-strong)] transition">Install</a>
+        <a href="/manual/" class="hover:text-[var(--color-fg-strong)] transition">Manual</a>
+        <a href="/docs/" class="hover:text-[var(--color-fg-strong)] transition">Docs</a>
+        <a href="https://github.com/joshhearne/resolvd" target="_blank" rel="noopener" class="hover:text-[var(--color-fg-strong)] transition">Source</a>
+      </div>
+      <div>MIT licensed</div>
     </div>
-    <div class="flex items-center gap-5">
-      <a href="/install/" class="hover:text-white transition">Install</a>
-      <a href="/manual/" class="hover:text-white transition">Manual</a>
-      <a href="/docs/" class="hover:text-white transition">Docs</a>
-      <a href="https://github.com/joshhearne/resolvd" target="_blank" rel="noopener" class="hover:text-white transition">Source</a>
+    <div class="flex justify-center pt-2 border-t border-[var(--color-border)]">
+      <a href="https://hearnetech.com" target="_blank" rel="noopener" class="flex items-center gap-3 text-xs text-[var(--color-fg-dim)] hover:text-[var(--color-fg-strong)] transition pt-6">
+        <span>Powered by</span>
+        <img src="/hearne-logo.png" alt="Hearne Technologies" class="hearne-logo-light h-6 w-auto" />
+        <img src="/hearne-logo-dark.png" alt="Hearne Technologies" class="hearne-logo-dark h-6 w-auto" />
+      </a>
     </div>
-    <div>MIT licensed</div>
   </div>
 </footer>
+
+<style is:global>
+  /* Show navy logo in light mode, white logo in dark mode */
+  .hearne-logo-dark { display: none; }
+  [data-theme="dark"] .hearne-logo-light { display: none; }
+  [data-theme="dark"] .hearne-logo-dark { display: inline-block; }
+</style>

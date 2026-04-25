@@ -10,7 +10,7 @@ const isActive = (href: string) =>
   href === "/" ? pathname === "/" : pathname.startsWith(href);
 ---
 
-<header class="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[rgba(10,15,28,0.75)] backdrop-blur-md">
+<header class="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-header-bg)] backdrop-blur-md">
   <nav class="mx-auto flex max-w-6xl items-center justify-between gap-6 px-6 py-4">
     <a href="/" class="flex items-center gap-2.5 group">
       <img src="/icon.svg" alt="" width="32" height="32" class="rounded-lg shadow-[0_0_24px_rgba(34,197,94,0.25)] transition group-hover:shadow-[0_0_28px_rgba(34,197,94,0.45)]" />
@@ -22,16 +22,77 @@ const isActive = (href: string) =>
           <a
             href={l.href}
             class={`px-3 py-1.5 rounded-md transition ${isActive(l.href)
-              ? "text-white bg-[var(--color-surface-2)] border border-[var(--color-border)]"
-              : "text-[var(--color-fg-muted)] hover:text-white"}`}
+              ? "text-[var(--color-fg-strong)] bg-[var(--color-surface-2)] border border-[var(--color-border)]"
+              : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)]"}`}
           >{l.label}</a>
         </li>
       ))}
     </ul>
     <div class="flex items-center gap-2">
-      <a href="https://github.com/joshhearne/resolvd" target="_blank" rel="noopener" class="text-sm text-[var(--color-fg-muted)] hover:text-white px-3 py-1.5 rounded-md border border-[var(--color-border)] hover:border-[var(--color-border-strong)] transition">
+      <button
+        id="theme-toggle"
+        type="button"
+        title="Toggle theme"
+        aria-label="Toggle theme"
+        class="flex items-center justify-center w-9 h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] hover:border-[var(--color-border-strong)] transition"
+      >
+        <span class="theme-icon-sun hidden" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        </span>
+        <span class="theme-icon-moon hidden" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </span>
+        <span class="theme-icon-auto hidden" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>
+        </span>
+      </button>
+      <a href="https://github.com/joshhearne/resolvd" target="_blank" rel="noopener" class="text-sm text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] px-3 py-1.5 rounded-md border border-[var(--color-border)] hover:border-[var(--color-border-strong)] transition">
         GitHub
       </a>
     </div>
   </nav>
 </header>
+
+<script is:inline>
+  (function () {
+    var btn = document.getElementById("theme-toggle");
+    if (!btn) return;
+    var order = ["auto", "light", "dark"];
+    var mql = window.matchMedia("(prefers-color-scheme: light)");
+
+    function resolve(pref) {
+      if (pref === "auto") return mql.matches ? "light" : "dark";
+      return pref;
+    }
+    function apply(pref) {
+      var resolved = resolve(pref);
+      document.documentElement.setAttribute("data-theme", resolved);
+      document.documentElement.setAttribute("data-theme-pref", pref);
+      try { localStorage.setItem("theme", pref); } catch (e) {}
+      paintIcon(pref);
+    }
+    function paintIcon(pref) {
+      ["sun", "moon", "auto"].forEach(function (k) {
+        var el = btn.querySelector(".theme-icon-" + k);
+        if (el) el.classList.add("hidden");
+      });
+      var key = pref === "light" ? "sun" : pref === "dark" ? "moon" : "auto";
+      var show = btn.querySelector(".theme-icon-" + key);
+      if (show) show.classList.remove("hidden");
+      btn.title = "Theme: " + pref + " (click to cycle)";
+    }
+    var current = document.documentElement.getAttribute("data-theme-pref") || "auto";
+    paintIcon(current);
+
+    btn.addEventListener("click", function () {
+      var pref = document.documentElement.getAttribute("data-theme-pref") || "auto";
+      var next = order[(order.indexOf(pref) + 1) % order.length];
+      apply(next);
+    });
+
+    mql.addEventListener("change", function () {
+      var pref = document.documentElement.getAttribute("data-theme-pref") || "auto";
+      if (pref === "auto") apply("auto");
+    });
+  })();
+</script>

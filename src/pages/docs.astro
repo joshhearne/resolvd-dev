@@ -15,7 +15,7 @@ import Layout from "../layouts/Layout.astro";
       <!-- env vars -->
       <article>
         <h2 class="text-2xl font-bold mb-4">Environment Variables</h2>
-        <p class="mb-4 text-sm text-[var(--color-fg-muted)]">Email backend (Graph / Gmail / SMTP) and SMTP credentials are configured at runtime in <strong class="text-white">Admin → Authentication → Email</strong>, not via env. Same for Entra/Google enable toggles — env vars below only supply the credentials.</p>
+        <p class="mb-4 text-sm text-[var(--color-fg-muted)]">Email backend (Graph / Gmail / SMTP) and SMTP credentials are configured at runtime in <strong class="text-[var(--color-fg-strong)]">Admin → Authentication → Email</strong>, not via env. Same for Entra/Google enable toggles — env vars below only supply the credentials.</p>
         <div class="overflow-x-auto rounded-xl border border-[var(--color-border)]">
           <table class="w-full text-sm">
             <thead class="bg-[var(--color-surface-2)] text-left text-xs uppercase tracking-wide text-[var(--color-fg-muted)]">
@@ -47,19 +47,19 @@ import Layout from "../layouts/Layout.astro";
         <h2 class="text-2xl font-bold mb-4">User Roles</h2>
         <div class="grid md:grid-cols-2 gap-3">
           <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-            <h3 class="font-semibold text-white">Admin</h3>
+            <h3 class="font-semibold text-[var(--color-fg-strong)]">Admin</h3>
             <p class="text-sm text-[var(--color-fg-muted)] mt-1">Full access. Manage users, projects, branding, auth, statuses.</p>
           </div>
           <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-            <h3 class="font-semibold text-white">Manager</h3>
+            <h3 class="font-semibold text-[var(--color-fg-strong)]">Manager</h3>
             <p class="text-sm text-[var(--color-fg-muted)] mt-1">Manage tickets in assigned projects. Assign work, change status.</p>
           </div>
           <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-            <h3 class="font-semibold text-white">Submitter</h3>
+            <h3 class="font-semibold text-[var(--color-fg-strong)]">Submitter</h3>
             <p class="text-sm text-[var(--color-fg-muted)] mt-1">Open tickets, comment, attach files. Cannot reassign.</p>
           </div>
           <div class="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
-            <h3 class="font-semibold text-white">Viewer</h3>
+            <h3 class="font-semibold text-[var(--color-fg-strong)]">Viewer</h3>
             <p class="text-sm text-[var(--color-fg-muted)] mt-1">Read-only. Useful for stakeholders and exec dashboards.</p>
           </div>
         </div>
@@ -68,19 +68,19 @@ import Layout from "../layouts/Layout.astro";
 
       <article>
         <h2 class="text-2xl font-bold mb-4">Operations</h2>
-        <h3 class="font-semibold text-white mt-4 mb-2">Update to a new release</h3>
+        <h3 class="font-semibold text-[var(--color-fg-strong)] mt-4 mb-2">Update to a new release</h3>
         <pre class="code-block" is:raw><span class="k">cd</span> resolvd
 <span class="k">git</span> pull
 <span class="k">docker</span> compose up -d --build</pre>
 
-        <h3 class="font-semibold text-white mt-6 mb-2">View logs</h3>
+        <h3 class="font-semibold text-[var(--color-fg-strong)] mt-6 mb-2">View logs</h3>
         <pre class="code-block" is:raw><span class="k">docker</span> compose logs -f backend
 <span class="k">docker</span> compose logs -f nginx</pre>
 
-        <h3 class="font-semibold text-white mt-6 mb-2">Reset a forgotten admin password</h3>
+        <h3 class="font-semibold text-[var(--color-fg-strong)] mt-6 mb-2">Reset a forgotten admin password</h3>
         <pre class="code-block" is:raw><span class="k">docker</span> exec -it resolvd-backend node scripts/reset-password.js &lt;email&gt;</pre>
 
-        <h3 class="font-semibold text-white mt-6 mb-2">Wipe everything (start fresh)</h3>
+        <h3 class="font-semibold text-[var(--color-fg-strong)] mt-6 mb-2">Wipe everything (start fresh)</h3>
         <pre class="code-block" is:raw><span class="k">docker</span> compose down -v
 <span class="k">rm</span> -rf data/uploads/*</pre>
       </article>
