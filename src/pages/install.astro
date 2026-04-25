@@ -1,0 +1,553 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Install Wizard — Resolvd" description="Configure your Resolvd Docker deployment with a click-through wizard.">
+  <section class="border-b border-[var(--color-border)]">
+    <div class="mx-auto max-w-6xl px-6 pt-16 pb-10">
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Install Wizard</h1>
+      <p class="mt-3 text-[var(--color-fg-muted)] max-w-2xl">
+        Pick your options. We'll generate a tailored <code class="text-[var(--color-brand)]">docker-compose.yml</code>,
+        <code class="text-[var(--color-brand)]">.env</code>, and reverse-proxy snippet you can copy or download.
+        All client-side — nothing leaves your browser.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="mx-auto max-w-6xl px-6 py-10 grid lg:grid-cols-2 gap-8">
+      <!-- ── Form ───────────────────────────── -->
+      <form id="wiz" class="space-y-6">
+        <!-- Domain & basics -->
+        <fieldset class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+          <legend class="px-2 text-sm font-semibold text-white">1. Basics</legend>
+          <div class="space-y-4 mt-2">
+            <label class="block">
+              <span class="text-sm text-[var(--color-fg-muted)]">Public URL</span>
+              <input id="frontendUrl" type="url" required value="https://issues.example.com"
+                class="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-2 text-sm font-mono focus:border-[var(--color-brand)] focus:outline-none" />
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="block">
+                <span class="text-sm text-[var(--color-fg-muted)]">Internal port</span>
+                <input id="internalPort" type="number" value="8090" min="1" max="65535"
+                  class="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-2 text-sm font-mono focus:border-[var(--color-brand)] focus:outline-none" />
+              </label>
+              <label class="block">
+                <span class="text-sm text-[var(--color-fg-muted)]">Max upload (MB)</span>
+                <input id="maxUpload" type="number" value="50" min="1" max="500"
+                  class="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-2 text-sm font-mono focus:border-[var(--color-brand)] focus:outline-none" />
+              </label>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="block">
+                <span class="text-sm text-[var(--color-fg-muted)]">DB name</span>
+                <input id="dbName" value="mot_issues"
+                  class="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-2 text-sm font-mono focus:border-[var(--color-brand)] focus:outline-none" />
+              </label>
+              <label class="block">
+                <span class="text-sm text-[var(--color-fg-muted)]">DB user</span>
+                <input id="dbUser" value="mot_issues"
+                  class="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-2 text-sm font-mono focus:border-[var(--color-brand)] focus:outline-none" />
+              </label>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Secrets -->
+        <fieldset class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+          <legend class="px-2 text-sm font-semibold text-white">2. Secrets</legend>
+          <div class="space-y-4 mt-2">
+            <div>
+              <label class="block">
+                <span class="text-sm text-[var(--color-fg-muted)]">POSTGRES_PASSWORD</span>
+                <div class="mt-1 flex gap-2">
+                  <input id="pgPass" type="text"
+                    class="flex-1 rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-2 text-sm font-mono focus:border-[var(--color-brand)] focus:outline-none" />
+                  <button type="button" data-regen="pgPass" class="rounded-md border border-[var(--color-border-strong)] bg-[var(--color-surface-2)] px-3 text-xs font-medium hover:bg-[var(--color-bg)] transition">↻ regen</button>
+                </div>
+              </label>
+            </div>
+            <div>
+              <label class="block">
+                <span class="text-sm text-[var(--color-fg-muted)]">SESSION_SECRET</span>
+                <div class="mt-1 flex gap-2">
+                  <input id="sessionSecret" type="text"
+                    class="flex-1 rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-2 text-sm font-mono focus:border-[var(--color-brand)] focus:outline-none" />
+                  <button type="button" data-regen="sessionSecret" class="rounded-md border border-[var(--color-border-strong)] bg-[var(--color-surface-2)] px-3 text-xs font-medium hover:bg-[var(--color-bg)] transition">↻ regen</button>
+                </div>
+              </label>
+            </div>
+            <p class="text-xs text-[var(--color-fg-dim)]">Generated locally with <code>crypto.getRandomValues</code>. Never sent to a server.</p>
+          </div>
+        </fieldset>
+
+        <!-- Auth -->
+        <fieldset class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+          <legend class="px-2 text-sm font-semibold text-white">3. Authentication</legend>
+          <p class="text-xs text-[var(--color-fg-dim)] mt-2">Pick one or more. Local accounts always work as fallback.</p>
+          <div class="space-y-3 mt-3">
+            <label class="flex items-start gap-3 rounded-md border border-[var(--color-border)] p-3 hover:border-[var(--color-border-strong)] cursor-pointer">
+              <input type="checkbox" id="authLocal" checked class="mt-1 accent-[var(--color-brand)]" />
+              <div>
+                <div class="font-medium text-sm">Local username/password</div>
+                <div class="text-xs text-[var(--color-fg-muted)]">Argon2 hashing, account lockout after 8 failed attempts.</div>
+              </div>
+            </label>
+            <label class="flex items-start gap-3 rounded-md border border-[var(--color-border)] p-3 hover:border-[var(--color-border-strong)] cursor-pointer">
+              <input type="checkbox" id="authEntra" class="mt-1 accent-[var(--color-brand)]" />
+              <div class="flex-1">
+                <div class="font-medium text-sm">Microsoft Entra ID (Azure AD)</div>
+                <div class="text-xs text-[var(--color-fg-muted)]">SSO via MSAL. Requires App Registration.</div>
+              </div>
+            </label>
+            <div id="entraFields" class="hidden space-y-3 pl-6 border-l-2 border-[var(--color-border)]">
+              <label class="block"><span class="text-xs text-[var(--color-fg-muted)]">AZURE_TENANT_ID</span><input id="azTenant" class="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-1.5 text-xs font-mono focus:border-[var(--color-brand)] focus:outline-none" /></label>
+              <label class="block"><span class="text-xs text-[var(--color-fg-muted)]">AZURE_CLIENT_ID</span><input id="azClient" class="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-1.5 text-xs font-mono focus:border-[var(--color-brand)] focus:outline-none" /></label>
+              <label class="block"><span class="text-xs text-[var(--color-fg-muted)]">AZURE_CLIENT_SECRET</span><input id="azSecret" type="password" class="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-1.5 text-xs font-mono focus:border-[var(--color-brand)] focus:outline-none" /></label>
+            </div>
+            <label class="flex items-start gap-3 rounded-md border border-[var(--color-border)] p-3 hover:border-[var(--color-border-strong)] cursor-pointer">
+              <input type="checkbox" id="authGoogle" class="mt-1 accent-[var(--color-brand)]" />
+              <div class="flex-1">
+                <div class="font-medium text-sm">Google OAuth</div>
+                <div class="text-xs text-[var(--color-fg-muted)]">Workspace or consumer accounts.</div>
+              </div>
+            </label>
+            <div id="googleFields" class="hidden space-y-3 pl-6 border-l-2 border-[var(--color-border)]">
+              <label class="block"><span class="text-xs text-[var(--color-fg-muted)]">GOOGLE_CLIENT_ID</span><input id="gClient" class="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-1.5 text-xs font-mono focus:border-[var(--color-brand)] focus:outline-none" /></label>
+              <label class="block"><span class="text-xs text-[var(--color-fg-muted)]">GOOGLE_CLIENT_SECRET</span><input id="gSecret" type="password" class="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-1.5 text-xs font-mono focus:border-[var(--color-brand)] focus:outline-none" /></label>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- Email -->
+        <fieldset class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+          <legend class="px-2 text-sm font-semibold text-white">4. Email backend</legend>
+          <div class="space-y-2 mt-3">
+            <label class="flex items-center gap-3 rounded-md border border-[var(--color-border)] p-3 cursor-pointer">
+              <input type="radio" name="emailType" value="none" checked class="accent-[var(--color-brand)]" />
+              <div><div class="text-sm font-medium">None</div><div class="text-xs text-[var(--color-fg-muted)]">Disable email notifications.</div></div>
+            </label>
+            <label class="flex items-center gap-3 rounded-md border border-[var(--color-border)] p-3 cursor-pointer">
+              <input type="radio" name="emailType" value="graph" class="accent-[var(--color-brand)]" />
+              <div><div class="text-sm font-medium">Microsoft Graph</div><div class="text-xs text-[var(--color-fg-muted)]">Reuses Entra credentials. Needs Mail.Send permission.</div></div>
+            </label>
+            <label class="flex items-center gap-3 rounded-md border border-[var(--color-border)] p-3 cursor-pointer">
+              <input type="radio" name="emailType" value="gmail" class="accent-[var(--color-brand)]" />
+              <div><div class="text-sm font-medium">Gmail API</div><div class="text-xs text-[var(--color-fg-muted)]">Reuses Google credentials. Needs gmail.send scope.</div></div>
+            </label>
+            <label class="flex items-center gap-3 rounded-md border border-[var(--color-border)] p-3 cursor-pointer">
+              <input type="radio" name="emailType" value="smtp" class="accent-[var(--color-brand)]" />
+              <div><div class="text-sm font-medium">SMTP</div><div class="text-xs text-[var(--color-fg-muted)]">Any provider — Postmark, Sendgrid, your own MTA.</div></div>
+            </label>
+            <div id="emailFields" class="hidden space-y-3 mt-2 pl-6 border-l-2 border-[var(--color-border)]">
+              <label class="block"><span class="text-xs text-[var(--color-fg-muted)]">MAIL_FROM</span><input id="mailFrom" placeholder="noreply@example.com" class="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-1.5 text-xs font-mono focus:border-[var(--color-brand)] focus:outline-none" /></label>
+              <div id="smtpFields" class="space-y-3 hidden">
+                <div class="grid grid-cols-2 gap-2">
+                  <label class="block"><span class="text-xs text-[var(--color-fg-muted)]">SMTP_HOST</span><input id="smtpHost" class="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-1.5 text-xs font-mono focus:border-[var(--color-brand)] focus:outline-none" /></label>
+                  <label class="block"><span class="text-xs text-[var(--color-fg-muted)]">SMTP_PORT</span><input id="smtpPort" type="number" value="587" class="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-1.5 text-xs font-mono focus:border-[var(--color-brand)] focus:outline-none" /></label>
+                </div>
+                <label class="block"><span class="text-xs text-[var(--color-fg-muted)]">SMTP_USER</span><input id="smtpUser" class="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-1.5 text-xs font-mono focus:border-[var(--color-brand)] focus:outline-none" /></label>
+                <label class="block"><span class="text-xs text-[var(--color-fg-muted)]">SMTP_PASSWORD</span><input id="smtpPass" type="password" class="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-1.5 text-xs font-mono focus:border-[var(--color-brand)] focus:outline-none" /></label>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- TLS -->
+        <fieldset class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+          <legend class="px-2 text-sm font-semibold text-white">5. TLS / Reverse Proxy</legend>
+          <p class="text-xs text-[var(--color-fg-dim)] mt-2">Resolvd binds locally — pick how HTTPS reaches it.</p>
+          <div class="space-y-2 mt-3">
+            <label class="flex items-center gap-3 rounded-md border border-[var(--color-border)] p-3 cursor-pointer">
+              <input type="radio" name="tlsType" value="caddy" checked class="accent-[var(--color-brand)]" />
+              <div><div class="text-sm font-medium">Caddy</div><div class="text-xs text-[var(--color-fg-muted)]">Auto Let's Encrypt. Easiest.</div></div>
+            </label>
+            <label class="flex items-center gap-3 rounded-md border border-[var(--color-border)] p-3 cursor-pointer">
+              <input type="radio" name="tlsType" value="nginx" class="accent-[var(--color-brand)]" />
+              <div><div class="text-sm font-medium">nginx + Certbot</div><div class="text-xs text-[var(--color-fg-muted)]">Classic. Snippet included.</div></div>
+            </label>
+            <label class="flex items-center gap-3 rounded-md border border-[var(--color-border)] p-3 cursor-pointer">
+              <input type="radio" name="tlsType" value="cloudflare" class="accent-[var(--color-brand)]" />
+              <div><div class="text-sm font-medium">Cloudflare Tunnel</div><div class="text-xs text-[var(--color-fg-muted)]">No open ports. Cloudflare handles TLS.</div></div>
+            </label>
+            <label class="flex items-center gap-3 rounded-md border border-[var(--color-border)] p-3 cursor-pointer">
+              <input type="radio" name="tlsType" value="manual" class="accent-[var(--color-brand)]" />
+              <div><div class="text-sm font-medium">Bring my own</div><div class="text-xs text-[var(--color-fg-muted)]">Skip the proxy snippet — I've got this.</div></div>
+            </label>
+          </div>
+        </fieldset>
+      </form>
+
+      <!-- ── Output preview ─────────────────── -->
+      <div class="lg:sticky lg:top-24 self-start">
+        <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
+          <div class="flex border-b border-[var(--color-border)] bg-[var(--color-surface-2)]" role="tablist">
+            <button data-tab="env" class="tab-btn px-4 py-3 text-xs font-medium border-r border-[var(--color-border)] text-white bg-[var(--color-surface)]">.env</button>
+            <button data-tab="compose" class="tab-btn px-4 py-3 text-xs font-medium border-r border-[var(--color-border)] text-[var(--color-fg-muted)] hover:text-white">docker-compose.yml</button>
+            <button data-tab="proxy" class="tab-btn px-4 py-3 text-xs font-medium border-r border-[var(--color-border)] text-[var(--color-fg-muted)] hover:text-white">proxy</button>
+            <button data-tab="run" class="tab-btn px-4 py-3 text-xs font-medium text-[var(--color-fg-muted)] hover:text-white">run</button>
+          </div>
+          <pre id="output" class="m-0 p-5 text-xs font-mono text-[#cbd5e1] overflow-auto max-h-[calc(100vh-180px)] min-h-[400px] bg-[#050810]"></pre>
+          <div class="flex gap-2 p-3 border-t border-[var(--color-border)] bg-[var(--color-surface-2)]">
+            <button id="copyBtn" class="flex-1 rounded-md bg-[var(--color-surface)] border border-[var(--color-border-strong)] px-3 py-2 text-xs font-medium hover:bg-[var(--color-bg)] transition">📋 Copy</button>
+            <button id="dlBtn" class="flex-1 rounded-md bg-[var(--color-brand)] text-[#062814] px-3 py-2 text-xs font-semibold hover:bg-[var(--color-brand-bright)] transition">⬇ Download all (.zip)</button>
+          </div>
+        </div>
+        <p class="mt-3 text-xs text-[var(--color-fg-dim)] text-center">Files generated entirely in your browser. <a href="https://github.com/joshhearne/resolvd-dev" class="underline hover:text-white">View source.</a></p>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  type State = ReturnType<typeof readForm>;
+
+  const $ = <T extends HTMLElement = HTMLInputElement>(id: string) =>
+    document.getElementById(id) as T;
+  const $$ = <T extends HTMLElement = HTMLElement>(sel: string) =>
+    Array.from(document.querySelectorAll(sel)) as T[];
+
+  function randHex(bytes: number): string {
+    const a = new Uint8Array(bytes);
+    crypto.getRandomValues(a);
+    return Array.from(a, b => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  function randPass(len = 32): string {
+    const chars = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+    const a = new Uint8Array(len);
+    crypto.getRandomValues(a);
+    return Array.from(a, b => chars[b % chars.length]).join("");
+  }
+
+  function readForm() {
+    return {
+      frontendUrl: $("frontendUrl").value.trim().replace(/\/$/, ""),
+      internalPort: $("internalPort").value || "8090",
+      maxUpload: $("maxUpload").value || "50",
+      dbName: $("dbName").value.trim() || "mot_issues",
+      dbUser: $("dbUser").value.trim() || "mot_issues",
+      pgPass: $("pgPass").value,
+      sessionSecret: $("sessionSecret").value,
+      authLocal: ($("authLocal") as HTMLInputElement).checked,
+      authEntra: ($("authEntra") as HTMLInputElement).checked,
+      authGoogle: ($("authGoogle") as HTMLInputElement).checked,
+      azTenant: $("azTenant").value.trim(),
+      azClient: $("azClient").value.trim(),
+      azSecret: $("azSecret").value,
+      gClient: $("gClient").value.trim(),
+      gSecret: $("gSecret").value,
+      emailType: (document.querySelector('input[name="emailType"]:checked') as HTMLInputElement).value,
+      mailFrom: $("mailFrom").value.trim(),
+      smtpHost: $("smtpHost").value.trim(),
+      smtpPort: $("smtpPort").value || "587",
+      smtpUser: $("smtpUser").value.trim(),
+      smtpPass: $("smtpPass").value,
+      tlsType: (document.querySelector('input[name="tlsType"]:checked') as HTMLInputElement).value,
+    };
+  }
+
+  function buildEnv(s: State): string {
+    const lines: string[] = [];
+    const add = (k: string, v: string, comment?: string) => {
+      if (comment) lines.push(`# ${comment}`);
+      lines.push(`${k}=${v}`);
+    };
+    const blank = () => lines.push("");
+
+    lines.push("# ─── Resolvd configuration ─────────────────────────");
+    lines.push("# Generated by https://resolvd.dev/install");
+    blank();
+    lines.push("# ── Required ──");
+    add("POSTGRES_PASSWORD", s.pgPass);
+    add("SESSION_SECRET", s.sessionSecret);
+    add("FRONTEND_URL", s.frontendUrl);
+    add("COOKIE_SECURE", s.frontendUrl.startsWith("https://") ? "true" : "false");
+    blank();
+    lines.push("# ── App ──");
+    add("PORT", "3001");
+    add("APP_INTERNAL_PORT", s.internalPort);
+    add("MAX_UPLOAD_MB", s.maxUpload);
+    add("UPLOADS_DIR", "/data/uploads");
+
+    if (s.authEntra) {
+      blank();
+      lines.push("# ── Microsoft Entra ID ──");
+      add("AZURE_TENANT_ID", s.azTenant || "<your-tenant-id>");
+      add("AZURE_CLIENT_ID", s.azClient || "<your-client-id>");
+      add("AZURE_CLIENT_SECRET", s.azSecret || "<your-client-secret>");
+      add("AZURE_REDIRECT_URI", `${s.frontendUrl}/auth/callback`);
+      add("AZURE_ALLOWED_ORIGINS", s.frontendUrl);
+    }
+    if (s.authGoogle) {
+      blank();
+      lines.push("# ── Google OAuth ──");
+      add("GOOGLE_CLIENT_ID", s.gClient || "<your-google-client-id>");
+      add("GOOGLE_CLIENT_SECRET", s.gSecret || "<your-google-client-secret>");
+      add("GOOGLE_REDIRECT_URI", `${s.frontendUrl}/auth/google/callback`);
+    }
+    if (s.emailType !== "none") {
+      blank();
+      lines.push("# ── Email ──");
+      add("MAIL_FROM", s.mailFrom || "noreply@example.com");
+      add("MAIL_BACKEND", s.emailType);
+      if (s.emailType === "smtp") {
+        add("SMTP_HOST", s.smtpHost || "smtp.example.com");
+        add("SMTP_PORT", s.smtpPort);
+        add("SMTP_USER", s.smtpUser || "<smtp-user>");
+        add("SMTP_PASSWORD", s.smtpPass || "<smtp-password>");
+      }
+    }
+    return lines.join("\n") + "\n";
+  }
+
+  function buildCompose(s: State): string {
+    return `# Generated by https://resolvd.dev/install
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: resolvd-postgres
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - POSTGRES_DB=${s.dbName}
+      - POSTGRES_USER=${s.dbUser}
+      - POSTGRES_PASSWORD=\${POSTGRES_PASSWORD}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    networks: [internal]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${s.dbUser}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: resolvd-backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=postgresql://${s.dbUser}:\${POSTGRES_PASSWORD}@postgres:5432/${s.dbName}
+      - UPLOADS_DIR=/data/uploads
+    volumes:
+      - uploads-data:/data/uploads
+    networks: [internal]
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    container_name: resolvd-frontend
+    restart: unless-stopped
+    networks: [internal]
+
+  nginx:
+    image: nginx:alpine
+    container_name: resolvd-nginx
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${s.internalPort}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks: [internal]
+    depends_on: [backend, frontend]
+
+volumes:
+  pg-data:
+  uploads-data:
+
+networks:
+  internal:
+    driver: bridge
+`;
+  }
+
+  function buildProxy(s: State): string {
+    const host = s.frontendUrl.replace(/^https?:\/\//, "");
+    if (s.tlsType === "caddy") {
+      return `# /etc/caddy/Caddyfile — append this block
+${host} {
+    reverse_proxy 127.0.0.1:${s.internalPort}
+    encode gzip zstd
+    request_body {
+        max_size ${s.maxUpload}MB
+    }
+}
+`;
+    }
+    if (s.tlsType === "nginx") {
+      return `# /etc/nginx/sites-available/resolvd
+# After saving: ln -s ../sites-available/resolvd /etc/nginx/sites-enabled/
+# Get cert:    sudo certbot --nginx -d ${host}
+
+server {
+    listen 80;
+    server_name ${host};
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name ${host};
+
+    ssl_certificate     /etc/letsencrypt/live/${host}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${host}/privkey.pem;
+
+    client_max_body_size ${s.maxUpload}M;
+
+    location / {
+        proxy_pass http://127.0.0.1:${s.internalPort};
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+`;
+    }
+    if (s.tlsType === "cloudflare") {
+      return `# Cloudflare Tunnel — config.yml
+# Install:  curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb -o cf.deb && sudo dpkg -i cf.deb
+# Auth:     cloudflared tunnel login
+# Create:   cloudflared tunnel create resolvd
+# Route:    cloudflared tunnel route dns resolvd ${host}
+
+tunnel: <your-tunnel-uuid>
+credentials-file: /home/youruser/.cloudflared/<uuid>.json
+
+ingress:
+  - hostname: ${host}
+    service: http://127.0.0.1:${s.internalPort}
+    originRequest:
+      noHappyEyeballs: true
+  - service: http_status:404
+`;
+    }
+    return `# You picked "Bring my own" — point your reverse proxy at:
+#   http://127.0.0.1:${s.internalPort}
+#
+# Required headers to forward:
+#   Host, X-Real-IP, X-Forwarded-For, X-Forwarded-Proto
+#
+# Make sure client_max_body_size (or equivalent) is at least ${s.maxUpload}M.
+`;
+  }
+
+  function buildRun(s: State): string {
+    const tlsHint =
+      s.tlsType === "caddy"
+        ? "\n# 4. Reload Caddy:\nsudo systemctl reload caddy\n"
+        : s.tlsType === "nginx"
+        ? "\n# 4. Test + reload nginx:\nsudo nginx -t && sudo systemctl reload nginx\nsudo certbot --nginx -d " + s.frontendUrl.replace(/^https?:\/\//, "") + "\n"
+        : s.tlsType === "cloudflare"
+        ? "\n# 4. Run the tunnel:\ncloudflared tunnel run resolvd\n# (or install as a service: cloudflared service install)\n"
+        : "";
+    return `# 1. Clone the app source
+git clone https://github.com/joshhearne/resolvd.git
+cd resolvd
+
+# 2. Drop in the generated files
+#    - .env                     (root of repo)
+#    - docker-compose.yml       (overwrite the default)
+#    - your proxy snippet       (wherever your proxy lives)
+
+# 3. Bring up the stack
+mkdir -p data/uploads
+docker compose up -d --build
+docker compose logs -f
+${tlsHint}
+# 5. Visit ${s.frontendUrl}
+#    First user to sign up becomes Admin.
+`;
+  }
+
+  let activeTab: "env" | "compose" | "proxy" | "run" = "env";
+
+  function render() {
+    const s = readForm();
+    const out =
+      activeTab === "env" ? buildEnv(s) :
+      activeTab === "compose" ? buildCompose(s) :
+      activeTab === "proxy" ? buildProxy(s) :
+      buildRun(s);
+    $("output").textContent = out;
+
+    $("entraFields").classList.toggle("hidden", !s.authEntra);
+    $("googleFields").classList.toggle("hidden", !s.authGoogle);
+    const showEmail = s.emailType !== "none";
+    $("emailFields").classList.toggle("hidden", !showEmail);
+    $("smtpFields").classList.toggle("hidden", s.emailType !== "smtp");
+  }
+
+  function setTab(t: typeof activeTab) {
+    activeTab = t;
+    $$(".tab-btn").forEach(b => {
+      const active = b.getAttribute("data-tab") === t;
+      b.classList.toggle("text-white", active);
+      b.classList.toggle("bg-[var(--color-surface)]", active);
+      b.classList.toggle("text-[var(--color-fg-muted)]", !active);
+    });
+    render();
+  }
+
+  function init() {
+    $("pgPass").value = randPass(32);
+    $("sessionSecret").value = randHex(32);
+
+    $("wiz").addEventListener("input", render);
+    $("wiz").addEventListener("change", render);
+
+    $$<HTMLButtonElement>("[data-regen]").forEach(b => {
+      b.addEventListener("click", () => {
+        const id = b.getAttribute("data-regen")!;
+        $(id).value = id === "pgPass" ? randPass(32) : randHex(32);
+        render();
+      });
+    });
+
+    $$<HTMLButtonElement>(".tab-btn").forEach(b => {
+      b.addEventListener("click", () => setTab(b.getAttribute("data-tab") as typeof activeTab));
+    });
+
+    $("copyBtn").addEventListener("click", async () => {
+      const text = $("output").textContent || "";
+      await navigator.clipboard.writeText(text);
+      const btn = $("copyBtn");
+      const orig = btn.textContent;
+      btn.textContent = "✓ Copied";
+      setTimeout(() => (btn.textContent = orig), 1200);
+    });
+
+    $("dlBtn").addEventListener("click", () => {
+      const s = readForm();
+      const files: [string, string][] = [
+        [".env", buildEnv(s)],
+        ["docker-compose.yml", buildCompose(s)],
+        ["RUN.md", buildRun(s)],
+      ];
+      if (s.tlsType !== "manual") {
+        const ext = s.tlsType === "caddy" ? "Caddyfile" : s.tlsType === "nginx" ? "nginx-resolvd.conf" : "cloudflared-config.yml";
+        files.push([ext, buildProxy(s)]);
+      }
+      // Plain concatenated tar would need a lib. Use a tiny zip-less bundle: download each file as separate Blob via sequential anchors.
+      for (const [name, content] of files) {
+        const blob = new Blob([content], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+      }
+    });
+
+    render();
+  }
+
+  init();
+</script>

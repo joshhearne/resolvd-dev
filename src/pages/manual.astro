@@ -1,0 +1,282 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Manual Setup — Resolvd" description="Step-by-step Resolvd setup with branching choices for each component.">
+  <section class="border-b border-[var(--color-border)]">
+    <div class="mx-auto max-w-4xl px-6 pt-16 pb-10">
+      <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Manual Setup</h1>
+      <p class="mt-3 text-[var(--color-fg-muted)] max-w-2xl">
+        Choose-your-own-adventure. Each step has options — pick what fits your stack.
+        Prefer a click-through? <a href="/install/" class="text-[var(--color-brand)] hover:underline">Use the wizard</a>.
+      </p>
+    </div>
+  </section>
+
+  <section>
+    <div class="mx-auto max-w-4xl px-6 py-12 space-y-8">
+
+      <!-- Step 0 -->
+      <article class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
+        <header class="flex items-baseline gap-3">
+          <span class="text-[var(--color-brand)] font-mono text-sm">00</span>
+          <h2 class="text-2xl font-bold">Prerequisites</h2>
+        </header>
+        <ul class="mt-4 space-y-2 text-sm text-[var(--color-fg-muted)] list-disc list-inside">
+          <li>Linux host (any distro). 1 vCPU, 1 GB RAM, 10 GB disk minimum.</li>
+          <li>A DNS A/AAAA record pointing at your host (or a Cloudflare Tunnel).</li>
+          <li>Docker 24+ and Docker Compose plugin v2.</li>
+          <li>Git.</li>
+        </ul>
+        <pre class="code-block mt-4"><span class="c"># Ubuntu/Debian one-liner</span>
+<span class="k">curl</span> -fsSL https://get.docker.com | sh
+<span class="k">sudo</span> usermod -aG docker $USER  <span class="c"># log out / in after</span></pre>
+      </article>
+
+      <!-- Step 1 -->
+      <article class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
+        <header class="flex items-baseline gap-3">
+          <span class="text-[var(--color-brand)] font-mono text-sm">01</span>
+          <h2 class="text-2xl font-bold">Clone the source</h2>
+        </header>
+        <pre class="code-block mt-4"><span class="k">git</span> clone https://github.com/joshhearne/resolvd.git
+<span class="k">cd</span> resolvd</pre>
+      </article>
+
+      <!-- Step 2 -->
+      <article class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
+        <header class="flex items-baseline gap-3">
+          <span class="text-[var(--color-brand)] font-mono text-sm">02</span>
+          <h2 class="text-2xl font-bold">Generate secrets</h2>
+        </header>
+        <p class="mt-3 text-sm text-[var(--color-fg-muted)]">You need two: a Postgres password and a session secret. Both 32+ chars.</p>
+        <pre class="code-block mt-4"><span class="k">openssl</span> rand -hex 32  <span class="c"># SESSION_SECRET</span>
+<span class="k">openssl</span> rand -base64 32  <span class="c"># POSTGRES_PASSWORD</span></pre>
+      </article>
+
+      <!-- Step 3 -->
+      <article class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
+        <header class="flex items-baseline gap-3">
+          <span class="text-[var(--color-brand)] font-mono text-sm">03</span>
+          <h2 class="text-2xl font-bold">Pick your auth providers</h2>
+        </header>
+        <p class="mt-3 text-sm text-[var(--color-fg-muted)]">You can mix and match. Local always works as a fallback.</p>
+
+        <details class="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)]">
+          <summary class="flex items-center gap-2 px-4 py-3 hover:bg-[var(--color-bg)] rounded-lg">
+            <span class="chev text-[var(--color-brand)]">▸</span>
+            <span class="font-medium">Option A — Local accounts only</span>
+            <span class="ml-auto text-xs text-[var(--color-fg-dim)]">Easiest</span>
+          </summary>
+          <div class="px-4 pb-4 pt-2 text-sm text-[var(--color-fg-muted)] space-y-2">
+            <p>Nothing to configure. Sign up at <code>/signup</code> after first boot — first account becomes Admin.</p>
+          </div>
+        </details>
+
+        <details class="mt-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)]">
+          <summary class="flex items-center gap-2 px-4 py-3 hover:bg-[var(--color-bg)] rounded-lg">
+            <span class="chev text-[var(--color-brand)]">▸</span>
+            <span class="font-medium">Option B — Microsoft Entra ID</span>
+            <span class="ml-auto text-xs text-[var(--color-fg-dim)]">Workspace SSO</span>
+          </summary>
+          <div class="px-4 pb-4 pt-2 text-sm text-[var(--color-fg-muted)] space-y-3">
+            <ol class="list-decimal list-inside space-y-1.5">
+              <li>Go to <a href="https://entra.microsoft.com" target="_blank" rel="noopener" class="text-[var(--color-brand)] hover:underline">Entra admin center</a> → App registrations → New.</li>
+              <li>Redirect URI (Web): <code>https://yourdomain.com/auth/callback</code></li>
+              <li>API permissions: <code>User.Read</code>, optionally <code>Mail.Send</code> for email.</li>
+              <li>Certificates &amp; secrets → New client secret. Copy it now.</li>
+              <li>Drop these into your <code>.env</code>:</li>
+            </ol>
+            <pre class="code-block" is:raw>AZURE_TENANT_ID=...
+AZURE_CLIENT_ID=...
+AZURE_CLIENT_SECRET=...
+AZURE_REDIRECT_URI=https://yourdomain.com/auth/callback
+AZURE_ALLOWED_ORIGINS=https://yourdomain.com</pre>
+          </div>
+        </details>
+
+        <details class="mt-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)]">
+          <summary class="flex items-center gap-2 px-4 py-3 hover:bg-[var(--color-bg)] rounded-lg">
+            <span class="chev text-[var(--color-brand)]">▸</span>
+            <span class="font-medium">Option C — Google OAuth</span>
+            <span class="ml-auto text-xs text-[var(--color-fg-dim)]">Workspace or consumer</span>
+          </summary>
+          <div class="px-4 pb-4 pt-2 text-sm text-[var(--color-fg-muted)] space-y-3">
+            <ol class="list-decimal list-inside space-y-1.5">
+              <li>Open <a href="https://console.cloud.google.com" target="_blank" rel="noopener" class="text-[var(--color-brand)] hover:underline">Google Cloud Console</a> → APIs &amp; Services → Credentials.</li>
+              <li>Create OAuth client ID → Web application.</li>
+              <li>Authorized redirect URI: <code>https://yourdomain.com/auth/google/callback</code></li>
+              <li>Copy client ID and secret into <code>.env</code>:</li>
+            </ol>
+            <pre class="code-block" is:raw>GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+GOOGLE_REDIRECT_URI=https://yourdomain.com/auth/google/callback</pre>
+          </div>
+        </details>
+      </article>
+
+      <!-- Step 4 -->
+      <article class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
+        <header class="flex items-baseline gap-3">
+          <span class="text-[var(--color-brand)] font-mono text-sm">04</span>
+          <h2 class="text-2xl font-bold">Pick your email backend</h2>
+        </header>
+        <p class="mt-3 text-sm text-[var(--color-fg-muted)]">Optional. Skip entirely if you don't want notifications.</p>
+
+        <details class="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)]">
+          <summary class="flex items-center gap-2 px-4 py-3 hover:bg-[var(--color-bg)]"><span class="chev text-[var(--color-brand)]">▸</span><span class="font-medium">Microsoft Graph</span><span class="ml-auto text-xs text-[var(--color-fg-dim)]">Reuses Entra app</span></summary>
+          <div class="px-4 pb-4 pt-2 text-sm text-[var(--color-fg-muted)] space-y-2">
+            <p>Add <code>Mail.Send</code> application permission to your Entra app, then grant admin consent.</p>
+            <pre class="code-block" is:raw>MAIL_BACKEND=graph
+MAIL_FROM=noreply@yourdomain.com</pre>
+          </div>
+        </details>
+
+        <details class="mt-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)]">
+          <summary class="flex items-center gap-2 px-4 py-3 hover:bg-[var(--color-bg)]"><span class="chev text-[var(--color-brand)]">▸</span><span class="font-medium">Gmail API</span><span class="ml-auto text-xs text-[var(--color-fg-dim)]">Reuses Google app</span></summary>
+          <div class="px-4 pb-4 pt-2 text-sm text-[var(--color-fg-muted)] space-y-2">
+            <p>Enable Gmail API in your Google Cloud project. Add <code>gmail.send</code> scope.</p>
+            <pre class="code-block" is:raw>MAIL_BACKEND=gmail
+MAIL_FROM=noreply@yourdomain.com</pre>
+          </div>
+        </details>
+
+        <details class="mt-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)]">
+          <summary class="flex items-center gap-2 px-4 py-3 hover:bg-[var(--color-bg)]"><span class="chev text-[var(--color-brand)]">▸</span><span class="font-medium">SMTP</span><span class="ml-auto text-xs text-[var(--color-fg-dim)]">Postmark, SendGrid, etc.</span></summary>
+          <div class="px-4 pb-4 pt-2 text-sm text-[var(--color-fg-muted)] space-y-2">
+            <pre class="code-block" is:raw>MAIL_BACKEND=smtp
+MAIL_FROM=noreply@yourdomain.com
+SMTP_HOST=smtp.postmarkapp.com
+SMTP_PORT=587
+SMTP_USER=...
+SMTP_PASSWORD=...</pre>
+          </div>
+        </details>
+      </article>
+
+      <!-- Step 5 -->
+      <article class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
+        <header class="flex items-baseline gap-3">
+          <span class="text-[var(--color-brand)] font-mono text-sm">05</span>
+          <h2 class="text-2xl font-bold">Bring up the stack</h2>
+        </header>
+        <pre class="code-block mt-4"><span class="k">cp</span> .env.example .env  <span class="c"># paste in everything from steps 2–4</span>
+<span class="k">mkdir</span> -p data/uploads
+<span class="k">docker</span> compose up -d --build
+<span class="k">docker</span> compose logs -f</pre>
+        <p class="mt-3 text-sm text-[var(--color-fg-muted)]">Stack now bound to <code>127.0.0.1:8090</code>. Not reachable externally yet.</p>
+      </article>
+
+      <!-- Step 6 -->
+      <article class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
+        <header class="flex items-baseline gap-3">
+          <span class="text-[var(--color-brand)] font-mono text-sm">06</span>
+          <h2 class="text-2xl font-bold">Pick your reverse proxy</h2>
+        </header>
+        <p class="mt-3 text-sm text-[var(--color-fg-muted)]">Pick one. All terminate TLS and forward to <code>127.0.0.1:8090</code>.</p>
+
+        <details class="mt-4 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)]" open>
+          <summary class="flex items-center gap-2 px-4 py-3 hover:bg-[var(--color-bg)]"><span class="chev text-[var(--color-brand)]">▸</span><span class="font-medium">Caddy</span><span class="ml-auto text-xs text-[var(--color-fg-dim)]">Auto-TLS, easiest</span></summary>
+          <div class="px-4 pb-4 pt-2 text-sm text-[var(--color-fg-muted)] space-y-2">
+            <pre class="code-block" is:raw><span class="c"># /etc/caddy/Caddyfile</span>
+yourdomain.com {
+    reverse_proxy 127.0.0.1:8090
+    request_body { max_size 50MB }
+}</pre>
+            <pre class="code-block" is:raw><span class="k">sudo</span> systemctl reload caddy</pre>
+          </div>
+        </details>
+
+        <details class="mt-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)]">
+          <summary class="flex items-center gap-2 px-4 py-3 hover:bg-[var(--color-bg)]"><span class="chev text-[var(--color-brand)]">▸</span><span class="font-medium">nginx + Certbot</span><span class="ml-auto text-xs text-[var(--color-fg-dim)]">Most familiar</span></summary>
+          <div class="px-4 pb-4 pt-2 text-sm text-[var(--color-fg-muted)] space-y-2">
+            <pre class="code-block" is:raw><span class="c"># /etc/nginx/sites-available/resolvd</span>
+server {
+    listen 80;
+    server_name yourdomain.com;
+
+    client_max_body_size 50M;
+    location / {
+        proxy_pass http://127.0.0.1:8090;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}</pre>
+            <pre class="code-block" is:raw><span class="k">sudo</span> ln -s /etc/nginx/sites-available/resolvd /etc/nginx/sites-enabled/
+<span class="k">sudo</span> nginx -t && sudo systemctl reload nginx
+<span class="k">sudo</span> certbot --nginx -d yourdomain.com</pre>
+          </div>
+        </details>
+
+        <details class="mt-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)]">
+          <summary class="flex items-center gap-2 px-4 py-3 hover:bg-[var(--color-bg)]"><span class="chev text-[var(--color-brand)]">▸</span><span class="font-medium">Cloudflare Tunnel</span><span class="ml-auto text-xs text-[var(--color-fg-dim)]">No open ports</span></summary>
+          <div class="px-4 pb-4 pt-2 text-sm text-[var(--color-fg-muted)] space-y-2">
+            <pre class="code-block" is:raw><span class="k">cloudflared</span> tunnel login
+<span class="k">cloudflared</span> tunnel create resolvd
+<span class="k">cloudflared</span> tunnel route dns resolvd yourdomain.com</pre>
+            <p>Edit <code>~/.cloudflared/config.yml</code>:</p>
+            <pre class="code-block" is:raw>tunnel: &lt;tunnel-uuid&gt;
+credentials-file: ~/.cloudflared/&lt;uuid&gt;.json
+ingress:
+  - hostname: yourdomain.com
+    service: http://127.0.0.1:8090
+  - service: http_status:404</pre>
+            <pre class="code-block" is:raw><span class="k">cloudflared</span> service install</pre>
+          </div>
+        </details>
+
+        <details class="mt-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-2)]">
+          <summary class="flex items-center gap-2 px-4 py-3 hover:bg-[var(--color-bg)]"><span class="chev text-[var(--color-brand)]">▸</span><span class="font-medium">Traefik</span><span class="ml-auto text-xs text-[var(--color-fg-dim)]">Container-native</span></summary>
+          <div class="px-4 pb-4 pt-2 text-sm text-[var(--color-fg-muted)] space-y-2">
+            <p>Add labels to the <code>nginx</code> service in <code>docker-compose.yml</code> and put it on your Traefik network:</p>
+            <pre class="code-block" is:raw>labels:
+  - "traefik.enable=true"
+  - "traefik.http.routers.resolvd.rule=Host(`yourdomain.com`)"
+  - "traefik.http.routers.resolvd.entrypoints=websecure"
+  - "traefik.http.routers.resolvd.tls.certresolver=letsencrypt"
+  - "traefik.http.services.resolvd.loadbalancer.server.port=80"</pre>
+          </div>
+        </details>
+      </article>
+
+      <!-- Step 7 -->
+      <article class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
+        <header class="flex items-baseline gap-3">
+          <span class="text-[var(--color-brand)] font-mono text-sm">07</span>
+          <h2 class="text-2xl font-bold">First-run setup</h2>
+        </header>
+        <ol class="mt-3 space-y-2 text-sm text-[var(--color-fg-muted)] list-decimal list-inside">
+          <li>Visit <code>https://yourdomain.com</code>.</li>
+          <li>Sign up — first account becomes Admin automatically.</li>
+          <li>Admin → Authentication: enable Entra/Google if you configured them.</li>
+          <li>Admin → Branding: upload logo, set color, change site name.</li>
+          <li>Admin → Users: invite your team, set roles.</li>
+          <li>Create your first project. Done.</li>
+        </ol>
+      </article>
+
+      <!-- Backups -->
+      <article class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6">
+        <header class="flex items-baseline gap-3">
+          <span class="text-[var(--color-brand)] font-mono text-sm">08</span>
+          <h2 class="text-2xl font-bold">Backups</h2>
+        </header>
+        <p class="mt-3 text-sm text-[var(--color-fg-muted)]">Two things to back up: the Postgres volume and the uploads volume.</p>
+        <pre class="code-block mt-4"><span class="c"># Postgres dump (run on the host)</span>
+<span class="k">docker</span> exec resolvd-postgres pg_dump -U mot_issues mot_issues \
+  | gzip > backup-$(date +%F).sql.gz
+
+<span class="c"># Uploads (rsync or tar the volume)</span>
+<span class="k">docker</span> run --rm -v resolvd_uploads-data:/src -v $(pwd):/dst \
+  alpine tar czf /dst/uploads-$(date +%F).tar.gz -C /src .</pre>
+        <p class="mt-3 text-sm text-[var(--color-fg-muted)]">Cron both nightly. Ship to S3/B2/wherever.</p>
+      </article>
+
+      <div class="text-center pt-6">
+        <p class="text-sm text-[var(--color-fg-muted)]">Stuck? <a href="https://github.com/joshhearne/resolvd/issues" target="_blank" rel="noopener" class="text-[var(--color-brand)] hover:underline">Open an issue</a> on GitHub.</p>
+      </div>
+    </div>
+  </section>
+</Layout>

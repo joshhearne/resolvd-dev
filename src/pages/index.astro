@@ -1,0 +1,159 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const features = [
+  {
+    icon: "🎯",
+    title: "Projects & Tickets",
+    body: "Scoped projects with custom prefixes (WEB-0042). Priority levels P1–P5, custom statuses, internal/external modes.",
+  },
+  {
+    icon: "🔐",
+    title: "Flexible Auth",
+    body: "Microsoft Entra ID, Google OAuth, or local accounts with Argon2. Mix and match. TOTP MFA enforceable per role.",
+  },
+  {
+    icon: "✉️",
+    title: "Email Notifications",
+    body: "Microsoft Graph, Gmail API, or plain SMTP. Followers notified on status changes, comments, and assignments.",
+  },
+  {
+    icon: "💬",
+    title: "Real Collaboration",
+    body: "Comments, @mentions, followers, attachments up to 50 MB. Bulk export, CSV import, audit trail.",
+  },
+  {
+    icon: "👥",
+    title: "Roles & Permissions",
+    body: "Admin, Manager, Submitter, Viewer — with per-project overrides for vendors and external collaborators.",
+  },
+  {
+    icon: "🎨",
+    title: "Custom Branding",
+    body: "Your logo, your color, your site name. Drop-in replacement for the default look.",
+  },
+  {
+    icon: "🐳",
+    title: "Docker-Native",
+    body: "Three services: Postgres, Node backend, React frontend. One docker compose up and you're running.",
+  },
+  {
+    icon: "🏠",
+    title: "Self-Hosted, Always",
+    body: "Your data on your hardware. No SaaS lock-in, no per-seat tax, no vendor surveying your tickets.",
+  },
+];
+---
+
+<Layout>
+  <section class="relative overflow-hidden">
+    <div class="mx-auto max-w-6xl px-6 pt-24 pb-20 md:pt-32 md:pb-28">
+      <div class="flex flex-col items-center text-center">
+        <span class="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1 text-xs text-[var(--color-fg-muted)]">
+          <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-brand)] shadow-[0_0_8px_var(--color-brand)]"></span>
+          v1.0 — production ready
+        </span>
+        <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05] max-w-4xl">
+          Issue tracking that <span class="text-[var(--color-brand)]">stays yours</span>.
+        </h1>
+        <p class="mt-6 max-w-2xl text-lg md:text-xl text-[var(--color-fg-muted)] leading-relaxed">
+          Resolvd is a self-hosted ticket and project tracker — none of the Jira bloat,
+          all of the workflow you actually need. Run it on a $5 VPS or in your homelab.
+        </p>
+        <div class="mt-10 flex flex-col sm:flex-row gap-3">
+          <a href="/install/" class="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--color-brand)] px-5 py-3 text-sm font-semibold text-[#062814] shadow-[0_0_30px_rgba(34,197,94,0.35)] hover:bg-[var(--color-brand-bright)] transition">
+            Configure your install
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </a>
+          <a href="/manual/" class="inline-flex items-center justify-center rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-5 py-3 text-sm font-semibold text-white hover:bg-[var(--color-surface-2)] transition">
+            Manual setup guide
+          </a>
+        </div>
+        <div class="mt-12 w-full max-w-2xl">
+          <pre class="code-block text-left" is:raw><span class="c"># 60-second install</span>
+<span class="k">git</span> clone https://github.com/joshhearne/resolvd.git
+<span class="k">cd</span> resolvd
+<span class="k">cp</span> .env.example .env  <span class="c"># edit secrets</span>
+<span class="k">docker</span> compose up -d --build</pre>
+        </div>
+      </div>
+    </div>
+    <div class="pointer-events-none absolute inset-x-0 top-0 h-[600px] -z-10 opacity-[0.04]" style="background-image: linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px); background-size: 32px 32px;"></div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-6xl px-6 py-20">
+      <div class="max-w-2xl">
+        <h2 class="text-3xl md:text-4xl font-bold tracking-tight">Everything you'd expect. Nothing you wouldn't.</h2>
+        <p class="mt-4 text-[var(--color-fg-muted)]">Built for engineering, support, and ops teams who've outgrown a spreadsheet but don't want to onboard a sales rep.</p>
+      </div>
+      <div class="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {features.map(f => (
+          <div class="group rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 hover:border-[var(--color-border-strong)] hover:bg-[var(--color-surface-2)] transition">
+            <div class="text-2xl mb-3">{f.icon}</div>
+            <h3 class="font-semibold text-white mb-1.5">{f.title}</h3>
+            <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed">{f.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-6xl px-6 py-20">
+      <div class="grid md:grid-cols-2 gap-12 items-start">
+        <div>
+          <h2 class="text-3xl md:text-4xl font-bold tracking-tight">Boring stack. <span class="text-[var(--color-brand)]">On purpose.</span></h2>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">No bespoke runtimes, no exotic databases, no proprietary protocols. Components you already know how to operate, monitor, and back up.</p>
+          <ul class="mt-6 space-y-3 text-sm">
+            <li class="flex gap-3"><span class="text-[var(--color-brand)] font-mono">→</span><span><strong class="text-white">Postgres 16</strong> for everything: tickets, sessions, branding config. <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">pg_dump</code> is your full backup.</span></li>
+            <li class="flex gap-3"><span class="text-[var(--color-brand)] font-mono">→</span><span><strong class="text-white">Node + Express</strong> backend. Argon2 hashing, express-session, Multer uploads.</span></li>
+            <li class="flex gap-3"><span class="text-[var(--color-brand)] font-mono">→</span><span><strong class="text-white">React + Vite + Tailwind</strong> frontend, served by nginx in a 30 MB Alpine image.</span></li>
+            <li class="flex gap-3"><span class="text-[var(--color-brand)] font-mono">→</span><span><strong class="text-white">Bring your own TLS</strong> — Caddy, nginx, Cloudflare Tunnel, whatever you already run.</span></li>
+          </ul>
+        </div>
+        <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-1">
+          <div class="rounded-lg bg-[#050810] p-5 font-mono text-xs leading-relaxed">
+            <div class="text-[var(--color-fg-dim)]">┌─ docker-compose.yml ──────────────┐</div>
+            <div class="text-[#cbd5e1] mt-2">
+              <span class="text-violet-300">services:</span><br />
+              &nbsp;&nbsp;<span class="text-violet-300">postgres:</span> <span class="text-emerald-300">postgres:16-alpine</span><br />
+              &nbsp;&nbsp;<span class="text-violet-300">backend:</span>&nbsp;&nbsp;<span class="text-emerald-300">node 22 + express</span><br />
+              &nbsp;&nbsp;<span class="text-violet-300">frontend:</span> <span class="text-emerald-300">nginx alpine</span><br />
+              &nbsp;&nbsp;<span class="text-violet-300">nginx:</span>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-emerald-300">internal router</span><br />
+            </div>
+            <div class="text-[var(--color-fg-dim)] mt-3">└────────────────────────────────────┘</div>
+            <div class="mt-4 text-[var(--color-fg-muted)]">
+              <span class="text-[var(--color-brand)]">▸</span> binds 127.0.0.1:8090<br />
+              <span class="text-[var(--color-brand)]">▸</span> volumes: pg-data, uploads<br />
+              <span class="text-[var(--color-brand)]">▸</span> total RAM: ~400 MB idle
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-4xl px-6 py-24 text-center">
+      <h2 class="text-3xl md:text-5xl font-bold tracking-tight">Two paths. Pick yours.</h2>
+      <p class="mt-4 text-[var(--color-fg-muted)] text-lg">Click through the wizard or follow the manual guide. Either way, you're up in under 10 minutes.</p>
+      <div class="mt-10 grid md:grid-cols-2 gap-4">
+        <a href="/install/" class="group rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-left hover:border-[var(--color-brand)] transition">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xl font-semibold">Install Wizard</h3>
+            <span class="text-[var(--color-brand)] group-hover:translate-x-1 transition">→</span>
+          </div>
+          <p class="mt-2 text-sm text-[var(--color-fg-muted)]">Pick your auth, email, TLS — get a ready-to-run docker-compose.yml and .env file.</p>
+        </a>
+        <a href="/manual/" class="group rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-left hover:border-[var(--color-brand)] transition">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xl font-semibold">Manual Setup</h3>
+            <span class="text-[var(--color-brand)] group-hover:translate-x-1 transition">→</span>
+          </div>
+          <p class="mt-2 text-sm text-[var(--color-fg-muted)]">Step-by-step with branching choices for the bring-your-own-everything crowd.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>
