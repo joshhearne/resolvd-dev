@@ -25,3 +25,11 @@ npm run preview
 - [ ] v2: live demo instance that resets every 4 hours
 - [ ] Screenshots / product gallery
 - [ ] Changelog page sourced from Resolvd releases
+
+## License
+
+Code, copy, design, and brand assets are © 2026 Hearne Technologies. All rights reserved.
+
+This repo is public for transparency, not for reuse. Not currently accepting community PRs — file an issue for feature suggestions or bugs.
+
+The Resolvd application is licensed separately under FSL-1.1-Apache-2.0: https://github.com/joshhearne/resolvd

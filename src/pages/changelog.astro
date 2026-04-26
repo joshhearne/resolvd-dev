@@ -1,0 +1,182 @@
+---
+import Layout from "../layouts/Layout.astro";
+import { getReleases, formatDate } from "../lib/releases";
+
+const releases = await getReleases();
+const hasReleases = releases.length > 0;
+---
+
+<Layout title="Changelog — Resolvd" description="Release notes for Resolvd. Pulled directly from GitHub Releases.">
+  <section class="relative overflow-hidden">
+    <div class="mx-auto max-w-3xl px-6 pt-20 pb-10 md:pt-28">
+      <span class="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1 text-xs text-[var(--color-fg-muted)]">
+        <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-brand)] shadow-[0_0_8px_var(--color-brand)]"></span>
+        Changelog
+      </span>
+      <h1 class="mt-2 text-4xl md:text-6xl font-bold tracking-tight leading-[1.05]">
+        What's <span class="text-[var(--color-brand)]">shipped</span>.
+      </h1>
+      <p class="mt-6 text-lg text-[var(--color-fg-muted)] leading-relaxed">
+        Pulled live from <a href="https://github.com/joshhearne/resolvd/releases" target="_blank" rel="noopener" class="text-[var(--color-brand)] hover:underline">GitHub Releases</a> at build time. Updated each time we cut a tag.
+      </p>
+    </div>
+    <div class="pointer-events-none absolute inset-x-0 top-0 h-[400px] -z-10 opacity-[0.04]" style="background-image: linear-gradient(to right, var(--color-fg-strong) 1px, transparent 1px), linear-gradient(to bottom, var(--color-fg-strong) 1px, transparent 1px); background-size: 32px 32px;"></div>
+  </section>
+
+  <section>
+    <div class="mx-auto max-w-3xl px-6 pb-24">
+      {!hasReleases ? (
+        <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-10 text-center">
+          <div class="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-brand)]/15 text-[var(--color-brand)] mb-4 font-mono text-xl">▾</div>
+          <h2 class="text-xl font-bold tracking-tight">First release coming soon.</h2>
+          <p class="mt-2 text-sm text-[var(--color-fg-muted)] leading-relaxed">
+            We're still in pre-release while features stabilize. Track progress on
+            <a href="https://github.com/joshhearne/resolvd" target="_blank" rel="noopener" class="text-[var(--color-brand)] hover:underline">GitHub</a>
+            or join the <a href="/pricing/" class="text-[var(--color-brand)] hover:underline">hosted waitlist</a>.
+          </p>
+        </div>
+      ) : (
+        <ol class="relative space-y-10 border-l border-[var(--color-border)] pl-8">
+          {releases.map((r, i) => (
+            <li class="relative">
+              <span class={`absolute -left-[37px] top-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full border-2 ${i === 0 ? "border-[var(--color-brand)] bg-[var(--color-brand)] shadow-[0_0_12px_var(--color-brand)]" : "border-[var(--color-border-strong)] bg-[var(--color-surface)]"}`}></span>
+              <article class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-7 hover:border-[var(--color-border-strong)] transition">
+                <header class="flex flex-wrap items-baseline gap-3 mb-4">
+                  <h2 class="text-2xl font-bold tracking-tight">
+                    <a href={r.url} target="_blank" rel="noopener" class="hover:text-[var(--color-brand)] transition">
+                      {r.name}
+                    </a>
+                  </h2>
+                  {r.prerelease && (
+                    <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                      Pre-release
+                    </span>
+                  )}
+                  {i === 0 && !r.prerelease && (
+                    <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded bg-[var(--color-brand)]/15 text-[var(--color-brand)] border border-[var(--color-brand)]/30">
+                      Latest
+                    </span>
+                  )}
+                  <span class="text-xs text-[var(--color-fg-dim)] font-mono ml-auto">
+                    {r.tag} · {formatDate(r.publishedAt)}
+                  </span>
+                </header>
+                {r.bodyHtml ? (
+                  <div class="changelog-body" set:html={r.bodyHtml}></div>
+                ) : (
+                  <p class="text-sm text-[var(--color-fg-dim)] italic">No release notes provided.</p>
+                )}
+              </article>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  </section>
+</Layout>
+
+<style is:global>
+  .changelog-body {
+    color: var(--color-fg-muted);
+    font-size: 0.9375rem;
+    line-height: 1.65;
+  }
+  .changelog-body h1,
+  .changelog-body h2,
+  .changelog-body h3,
+  .changelog-body h4 {
+    color: var(--color-fg-strong);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin-top: 1.5rem;
+    margin-bottom: 0.6rem;
+  }
+  .changelog-body h1 { font-size: 1.25rem; }
+  .changelog-body h2 { font-size: 1.125rem; }
+  .changelog-body h3 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-brand); font-size: 0.75rem; margin-top: 1.25rem; }
+  .changelog-body h4 { font-size: 0.875rem; }
+  .changelog-body > *:first-child { margin-top: 0; }
+  .changelog-body > *:last-child { margin-bottom: 0; }
+  .changelog-body p { margin: 0.6rem 0; }
+  .changelog-body ul,
+  .changelog-body ol { margin: 0.6rem 0; padding-left: 1.25rem; }
+  .changelog-body ul { list-style: none; padding-left: 0; }
+  .changelog-body ul li {
+    position: relative;
+    padding-left: 1.25rem;
+    margin: 0.35rem 0;
+  }
+  .changelog-body ul li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--color-brand);
+    font-family: ui-monospace, monospace;
+    font-weight: 600;
+  }
+  .changelog-body ol li { margin: 0.35rem 0; }
+  .changelog-body code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.85em;
+    background: var(--color-surface-2);
+    color: var(--color-brand);
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.25rem;
+    border: 1px solid var(--color-border);
+  }
+  .changelog-body pre {
+    background: #050810;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    overflow-x: auto;
+    margin: 0.8rem 0;
+    font-size: 0.85rem;
+  }
+  .changelog-body pre code {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    color: #cbd5e1;
+  }
+  .changelog-body a {
+    color: var(--color-brand);
+    text-decoration: none;
+  }
+  .changelog-body a:hover { text-decoration: underline; }
+  .changelog-body strong { color: var(--color-fg-strong); }
+  .changelog-body blockquote {
+    border-left: 3px solid var(--color-brand);
+    padding-left: 1rem;
+    margin: 0.8rem 0;
+    color: var(--color-fg-dim);
+    font-style: italic;
+  }
+  .changelog-body hr {
+    border: 0;
+    border-top: 1px solid var(--color-border);
+    margin: 1.25rem 0;
+  }
+  .changelog-body img {
+    max-width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-border);
+    margin: 0.8rem 0;
+  }
+  .changelog-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.8rem 0;
+    font-size: 0.875rem;
+  }
+  .changelog-body th,
+  .changelog-body td {
+    border: 1px solid var(--color-border);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+  .changelog-body th {
+    background: var(--color-surface-2);
+    color: var(--color-fg-strong);
+  }
+</style>

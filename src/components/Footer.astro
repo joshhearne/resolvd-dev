@@ -1,4 +1,6 @@
 ---
+import { getLatestRelease, formatDate } from "../lib/releases";
+const latest = await getLatestRelease();
 ---
 
 <footer class="mt-32 border-t border-[var(--color-border)] py-10">
@@ -9,12 +11,23 @@
         <span>Resolvd — self-hosted issue tracking</span>
       </div>
       <div class="flex items-center gap-5">
+        <a href="/pricing/" class="hover:text-[var(--color-fg-strong)] transition">Pricing</a>
         <a href="/install/" class="hover:text-[var(--color-fg-strong)] transition">Install</a>
         <a href="/manual/" class="hover:text-[var(--color-fg-strong)] transition">Manual</a>
         <a href="/docs/" class="hover:text-[var(--color-fg-strong)] transition">Docs</a>
+        <a href="/changelog/" class="hover:text-[var(--color-fg-strong)] transition">Changelog</a>
         <a href="https://github.com/joshhearne/resolvd" target="_blank" rel="noopener" class="hover:text-[var(--color-fg-strong)] transition">Source</a>
       </div>
-      <div>MIT licensed</div>
+      <div class="flex items-center gap-4 text-xs">
+        {latest && (
+          <a href="/changelog/" class="inline-flex items-center gap-1.5 text-[var(--color-fg-dim)] hover:text-[var(--color-brand)] transition">
+            <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-brand)] shadow-[0_0_6px_var(--color-brand)]"></span>
+            <span class="font-mono tabular-nums">{latest.tag}</span>
+            <span class="text-[var(--color-fg-dim)]">· {formatDate(latest.publishedAt)}</span>
+          </a>
+        )}
+        <a href="/license/" class="hover:text-[var(--color-fg-strong)] transition">FSL-1.1</a>
+      </div>
     </div>
     <div class="flex justify-center pt-2 border-t border-[var(--color-border)]">
       <a href="https://hearnetech.com" target="_blank" rel="noopener" class="flex items-center gap-3 text-xs text-[var(--color-fg-dim)] hover:text-[var(--color-fg-strong)] transition pt-6">
