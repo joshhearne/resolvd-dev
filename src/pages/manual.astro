@@ -274,7 +274,7 @@ ingress:
         </header>
         <p class="mt-3 text-sm text-[var(--color-fg-muted)]">Two things to back up: the Postgres volume and the uploads volume.</p>
         <pre class="code-block mt-4"><span class="c"># Postgres dump (run on the host)</span>
-<span class="k">docker</span> exec resolvd-postgres pg_dump -U mot_issues mot_issues \
+<span class="k">docker</span> exec resolvd-postgres pg_dump -U resolvd resolvd \
   | gzip > backup-$(date +%F).sql.gz
 
 <span class="c"># Uploads (rsync or tar the volume)</span>

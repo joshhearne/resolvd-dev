@@ -42,12 +42,12 @@ import Layout from "../layouts/Layout.astro";
             <div class="grid grid-cols-2 gap-3">
               <label class="block">
                 <span class="text-sm text-[var(--color-fg-muted)]">DB name</span>
-                <input id="dbName" value="mot_issues"
+                <input id="dbName" value="resolvd"
                   class="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-2 text-sm font-mono focus:border-[var(--color-brand)] focus:outline-none" />
               </label>
               <label class="block">
                 <span class="text-sm text-[var(--color-fg-muted)]">DB user</span>
-                <input id="dbUser" value="mot_issues"
+                <input id="dbUser" value="resolvd"
                   class="mt-1 w-full rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-2 text-sm font-mono focus:border-[var(--color-brand)] focus:outline-none" />
               </label>
             </div>
@@ -57,14 +57,49 @@ import Layout from "../layouts/Layout.astro";
         <!-- Secrets -->
         <fieldset class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
           <legend class="px-2 text-sm font-semibold text-[var(--color-fg-strong)]">2. Secrets</legend>
-          <div class="space-y-4 mt-2">
+          <p class="mt-2 text-xs text-[var(--color-fg-dim)]">Two random values: a Postgres password and a session secret. Generate them yourself (recommended for production) or let the browser auto-fill below.</p>
+
+          <details class="mt-3 rounded-md border border-[var(--color-border)] bg-[var(--color-bg)]" open>
+            <summary class="cursor-pointer select-none px-3 py-2 text-xs font-medium text-[var(--color-fg-strong)] hover:bg-[var(--color-surface-2)]">Generate locally → paste below</summary>
+            <div class="px-3 pb-3 pt-1 space-y-3">
+              <p class="text-xs text-[var(--color-fg-muted)]">Run one command per secret on your own machine, then paste the output into the matching field. Pick whichever runtime you have.</p>
+
+              <div data-snippet>
+                <div class="flex items-center justify-between text-[11px] text-[var(--color-fg-dim)]"><span>openssl (Linux/macOS/WSL)</span><button type="button" data-copy class="rounded border border-[var(--color-border-strong)] bg-[var(--color-surface-2)] px-2 py-0.5 text-[11px] font-medium hover:bg-[var(--color-surface)] transition">📋 copy</button></div>
+                <pre data-snippet-text class="mt-1 m-0 p-2 text-[11px] font-mono text-[#cbd5e1] bg-[#050810] rounded border border-[var(--color-border)] overflow-auto"><code>openssl rand -base64 32   # POSTGRES_PASSWORD
+openssl rand -hex 32      # SESSION_SECRET</code></pre>
+              </div>
+
+              <div data-snippet>
+                <div class="flex items-center justify-between text-[11px] text-[var(--color-fg-dim)]"><span>node</span><button type="button" data-copy class="rounded border border-[var(--color-border-strong)] bg-[var(--color-surface-2)] px-2 py-0.5 text-[11px] font-medium hover:bg-[var(--color-surface)] transition">📋 copy</button></div>
+                <pre data-snippet-text class="mt-1 m-0 p-2 text-[11px] font-mono text-[#cbd5e1] bg-[#050810] rounded border border-[var(--color-border)] overflow-auto"><code>node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"   # POSTGRES_PASSWORD
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"      # SESSION_SECRET</code></pre>
+              </div>
+
+              <div data-snippet>
+                <div class="flex items-center justify-between text-[11px] text-[var(--color-fg-dim)]"><span>python</span><button type="button" data-copy class="rounded border border-[var(--color-border-strong)] bg-[var(--color-surface-2)] px-2 py-0.5 text-[11px] font-medium hover:bg-[var(--color-surface)] transition">📋 copy</button></div>
+                <pre data-snippet-text class="mt-1 m-0 p-2 text-[11px] font-mono text-[#cbd5e1] bg-[#050810] rounded border border-[var(--color-border)] overflow-auto"><code>python -c "import secrets; print(secrets.token_urlsafe(32))"   # POSTGRES_PASSWORD
+python -c "import secrets; print(secrets.token_hex(32))"       # SESSION_SECRET</code></pre>
+              </div>
+
+              <div data-snippet>
+                <div class="flex items-center justify-between text-[11px] text-[var(--color-fg-dim)]"><span>powershell (Windows)</span><button type="button" data-copy class="rounded border border-[var(--color-border-strong)] bg-[var(--color-surface-2)] px-2 py-0.5 text-[11px] font-medium hover:bg-[var(--color-surface)] transition">📋 copy</button></div>
+                <pre data-snippet-text class="mt-1 m-0 p-2 text-[11px] font-mono text-[#cbd5e1] bg-[#050810] rounded border border-[var(--color-border)] overflow-auto"><code>[Convert]::ToBase64String((1..32 | %&#123;[byte](Get-Random -Max 256)&#125;))   # POSTGRES_PASSWORD
+-join ((1..32) | %&#123; '&#123;0:x2&#125;' -f (Get-Random -Max 256) &#125;)             # SESSION_SECRET</code></pre>
+              </div>
+
+              <p class="text-[11px] text-[var(--color-fg-dim)]">Either secret needs ~32 random bytes. Avoid words, dates, or anything memorable.</p>
+            </div>
+          </details>
+
+          <div class="space-y-4 mt-4">
             <div>
               <label class="block">
                 <span class="text-sm text-[var(--color-fg-muted)]">POSTGRES_PASSWORD</span>
                 <div class="mt-1 flex gap-2">
-                  <input id="pgPass" type="text"
+                  <input id="pgPass" type="text" placeholder="paste your generated value, or click regen"
                     class="flex-1 rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-2 text-sm font-mono focus:border-[var(--color-brand)] focus:outline-none" />
-                  <button type="button" data-regen="pgPass" class="rounded-md border border-[var(--color-border-strong)] bg-[var(--color-surface-2)] px-3 text-xs font-medium hover:bg-[var(--color-bg)] transition">↻ regen</button>
+                  <button type="button" data-regen="pgPass" class="rounded-md border border-[var(--color-border-strong)] bg-[var(--color-surface-2)] px-3 text-xs font-medium hover:bg-[var(--color-bg)] transition" title="Auto-generate in browser">↻ regen</button>
                 </div>
               </label>
             </div>
@@ -72,13 +107,13 @@ import Layout from "../layouts/Layout.astro";
               <label class="block">
                 <span class="text-sm text-[var(--color-fg-muted)]">SESSION_SECRET</span>
                 <div class="mt-1 flex gap-2">
-                  <input id="sessionSecret" type="text"
+                  <input id="sessionSecret" type="text" placeholder="paste your generated value, or click regen"
                     class="flex-1 rounded-md border border-[var(--color-border-strong)] bg-[var(--color-bg)] px-3 py-2 text-sm font-mono focus:border-[var(--color-brand)] focus:outline-none" />
-                  <button type="button" data-regen="sessionSecret" class="rounded-md border border-[var(--color-border-strong)] bg-[var(--color-surface-2)] px-3 text-xs font-medium hover:bg-[var(--color-bg)] transition">↻ regen</button>
+                  <button type="button" data-regen="sessionSecret" class="rounded-md border border-[var(--color-border-strong)] bg-[var(--color-surface-2)] px-3 text-xs font-medium hover:bg-[var(--color-bg)] transition" title="Auto-generate in browser">↻ regen</button>
                 </div>
               </label>
             </div>
-            <p class="text-xs text-[var(--color-fg-dim)]">Generated locally with <code>crypto.getRandomValues</code>. Never sent to a server.</p>
+            <p class="text-xs text-[var(--color-fg-dim)]">Auto-fill uses <code>crypto.getRandomValues</code> in your browser — nothing is sent over the network. Leave a field blank and the generated <code>.env</code> will include a placeholder + <code>openssl</code> command instead.</p>
           </div>
         </fieldset>
 
@@ -226,8 +261,8 @@ import Layout from "../layouts/Layout.astro";
       frontendUrl: $("frontendUrl").value.trim().replace(/\/$/, ""),
       internalPort: $("internalPort").value || "8090",
       maxUpload: $("maxUpload").value || "50",
-      dbName: $("dbName").value.trim() || "mot_issues",
-      dbUser: $("dbUser").value.trim() || "mot_issues",
+      dbName: $("dbName").value.trim() || "resolvd",
+      dbUser: $("dbUser").value.trim() || "resolvd",
       pgPass: $("pgPass").value,
       sessionSecret: $("sessionSecret").value,
       authLocal: ($("authLocal") as HTMLInputElement).checked,
@@ -260,8 +295,10 @@ import Layout from "../layouts/Layout.astro";
     lines.push("# Generated by https://resolvd.dev/install");
     blank();
     lines.push("# ── Required ──");
-    add("POSTGRES_PASSWORD", s.pgPass);
-    add("SESSION_SECRET", s.sessionSecret);
+    if (!s.pgPass) lines.push("# Generate with: openssl rand -base64 32");
+    add("POSTGRES_PASSWORD", s.pgPass || "<paste-32-byte-random-value>");
+    if (!s.sessionSecret) lines.push("# Generate with: openssl rand -hex 32");
+    add("SESSION_SECRET", s.sessionSecret || "<paste-32-byte-random-value>");
     add("FRONTEND_URL", s.frontendUrl);
     add("COOKIE_SECURE", s.frontendUrl.startsWith("https://") ? "true" : "false");
     blank();
@@ -509,6 +546,17 @@ ${tlsHint}
 
     $$<HTMLButtonElement>(".tab-btn").forEach(b => {
       b.addEventListener("click", () => setTab(b.getAttribute("data-tab") as typeof activeTab));
+    });
+
+    $$<HTMLButtonElement>("[data-copy]").forEach(b => {
+      b.addEventListener("click", async () => {
+        const wrap = b.closest("[data-snippet]");
+        const text = wrap?.querySelector("[data-snippet-text]")?.textContent || "";
+        await navigator.clipboard.writeText(text);
+        const orig = b.textContent;
+        b.textContent = "✓ copied";
+        setTimeout(() => (b.textContent = orig), 1200);
+      });
     });
 
     $("copyBtn").addEventListener("click", async () => {
