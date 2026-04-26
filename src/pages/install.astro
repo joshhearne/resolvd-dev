@@ -4,7 +4,7 @@ import Layout from "../layouts/Layout.astro";
 
 <Layout title="Install Wizard — Resolvd" description="Configure your Resolvd Docker deployment with a click-through wizard.">
   <section class="border-b border-[var(--color-border)]">
-    <div class="mx-auto max-w-6xl px-6 pt-16 pb-10">
+    <div class="mx-auto max-w-7xl px-6 pt-16 pb-10">
       <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Install Wizard</h1>
       <p class="mt-3 text-[var(--color-fg-muted)] max-w-2xl">
         Pick your options. We'll generate a tailored <code class="text-[var(--color-brand)]">docker-compose.yml</code>,
@@ -15,7 +15,7 @@ import Layout from "../layouts/Layout.astro";
   </section>
 
   <section>
-    <div class="mx-auto max-w-6xl px-6 py-10 grid lg:grid-cols-2 gap-8">
+    <div class="mx-auto max-w-7xl px-6 py-10 grid xl:grid-cols-2 gap-8">
       <!-- ── Form ───────────────────────────── -->
       <form id="wiz" class="space-y-6 min-w-0">
         <!-- Domain & basics -->
@@ -215,7 +215,7 @@ python -c "import secrets; print(secrets.token_hex(32))"       # SESSION_SECRET<
       </form>
 
       <!-- ── Output preview ─────────────────── -->
-      <div class="lg:sticky lg:top-24 self-start">
+      <div class="xl:sticky xl:top-24 self-start">
         <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] overflow-hidden">
           <div class="flex border-b border-[var(--color-border)] bg-[var(--color-surface-2)]" role="tablist">
             <button data-tab="env" class="tab-btn px-4 py-3 text-xs font-medium border-r border-[var(--color-border)] text-[var(--color-fg-strong)] bg-[var(--color-surface)]">.env</button>
