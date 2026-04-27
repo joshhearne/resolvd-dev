@@ -57,12 +57,12 @@ const formId = import.meta.env.PUBLIC_LOOPS_FORM_ID || "";
           <span class="block text-xs font-semibold uppercase tracking-wider text-[var(--color-fg-muted)] mb-2">Interested tier</span>
           <div class="grid grid-cols-3 gap-2" role="radiogroup">
             {[
-              { id: "small", group: "hosted-small" },
-              { id: "team", group: "hosted-team" },
-              { id: "pro", group: "hosted-pro" },
+              { id: "small" },
+              { id: "team" },
+              { id: "pro" },
             ].map(t => (
               <label class="cursor-pointer">
-                <input type="radio" name="userGroup" value={t.group} class="peer sr-only" required />
+                <input type="radio" name="userGroup" value={t.id} class="peer sr-only" required />
                 <span class="block text-center px-3 py-2 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface-2)] text-sm font-semibold text-[var(--color-fg-muted)] capitalize hover:text-[var(--color-fg-strong)] peer-checked:border-[var(--color-brand)] peer-checked:bg-[var(--color-brand)]/10 peer-checked:text-[var(--color-brand)] transition">
                   {t.id}
                 </span>
@@ -127,7 +127,7 @@ const formId = import.meta.env.PUBLIC_LOOPS_FORM_ID || "";
     if (errorBox) errorBox.classList.add("hidden");
     if (form) form.reset();
     if (tier) {
-      var radio = modal.querySelector('input[name="userGroup"][value="hosted-' + tier + '"]');
+      var radio = modal.querySelector('input[name="userGroup"][value="' + tier + '"]');
       if (radio) radio.checked = true;
     }
     if (typeof modal.showModal === "function") {
