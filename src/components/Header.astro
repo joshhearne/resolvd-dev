@@ -47,11 +47,55 @@ const isActive = (href: string) =>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>
         </span>
       </button>
-      <a href="https://github.com/joshhearne/resolvd" target="_blank" rel="noopener" class="text-sm text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] px-3 py-1.5 rounded-md border border-[var(--color-border)] hover:border-[var(--color-border-strong)] transition">
+      <a href="https://github.com/joshhearne/resolvd" target="_blank" rel="noopener" class="hidden sm:inline-flex text-sm text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] px-3 py-1.5 rounded-md border border-[var(--color-border)] hover:border-[var(--color-border-strong)] transition">
         GitHub
       </a>
+      <button
+        id="mobile-nav-toggle"
+        type="button"
+        aria-label="Open menu"
+        aria-controls="mobile-nav-panel"
+        aria-expanded="false"
+        class="md:hidden flex items-center justify-center w-9 h-9 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] hover:border-[var(--color-border-strong)] transition"
+      >
+        <svg class="mobile-nav-icon-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        <svg class="mobile-nav-icon-close hidden" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
     </div>
   </nav>
+  <div
+    id="mobile-nav-panel"
+    class="hidden md:hidden border-t border-[var(--color-border)] bg-[var(--color-header-bg)]"
+  >
+    <ul class="flex flex-col gap-1 px-6 py-4 text-sm">
+      {links.map(l => (
+        <li>
+          <a
+            href={l.href}
+            class={`block px-3 py-2.5 rounded-md transition ${isActive(l.href)
+              ? "text-[var(--color-fg-strong)] bg-[var(--color-surface-2)] border border-[var(--color-border)]"
+              : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] hover:bg-[var(--color-surface)]"}`}
+          >{l.label}</a>
+        </li>
+      ))}
+      <li>
+        <a
+          href="/changelog/"
+          class={`block px-3 py-2.5 rounded-md transition ${isActive("/changelog/")
+            ? "text-[var(--color-fg-strong)] bg-[var(--color-surface-2)] border border-[var(--color-border)]"
+            : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] hover:bg-[var(--color-surface)]"}`}
+        >Changelog</a>
+      </li>
+      <li class="sm:hidden">
+        <a
+          href="https://github.com/joshhearne/resolvd"
+          target="_blank"
+          rel="noopener"
+          class="block px-3 py-2.5 rounded-md text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] hover:bg-[var(--color-surface)] transition"
+        >GitHub ↗</a>
+      </li>
+    </ul>
+  </div>
 </header>
 
 <script is:inline>
@@ -94,6 +138,38 @@ const isActive = (href: string) =>
     mql.addEventListener("change", function () {
       var pref = document.documentElement.getAttribute("data-theme-pref") || "auto";
       if (pref === "auto") apply("auto");
+    });
+  })();
+
+  (function () {
+    var btn = document.getElementById("mobile-nav-toggle");
+    var panel = document.getElementById("mobile-nav-panel");
+    if (!btn || !panel) return;
+    var iconOpen = btn.querySelector(".mobile-nav-icon-open");
+    var iconClose = btn.querySelector(".mobile-nav-icon-close");
+    function setOpen(open) {
+      if (open) {
+        panel.classList.remove("hidden");
+        btn.setAttribute("aria-expanded", "true");
+        btn.setAttribute("aria-label", "Close menu");
+        if (iconOpen) iconOpen.classList.add("hidden");
+        if (iconClose) iconClose.classList.remove("hidden");
+      } else {
+        panel.classList.add("hidden");
+        btn.setAttribute("aria-expanded", "false");
+        btn.setAttribute("aria-label", "Open menu");
+        if (iconOpen) iconOpen.classList.remove("hidden");
+        if (iconClose) iconClose.classList.add("hidden");
+      }
+    }
+    btn.addEventListener("click", function () {
+      setOpen(btn.getAttribute("aria-expanded") !== "true");
+    });
+    panel.querySelectorAll("a").forEach(function (a) {
+      a.addEventListener("click", function () { setOpen(false); });
+    });
+    window.matchMedia("(min-width: 768px)").addEventListener("change", function (e) {
+      if (e.matches) setOpen(false);
     });
   })();
 </script>
