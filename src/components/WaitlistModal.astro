@@ -42,13 +42,13 @@ const formId = import.meta.env.PUBLIC_LOOPS_FORM_ID || "";
         </div>
 
         <div>
-          <label for="waitlist-name" class="block text-xs font-semibold uppercase tracking-wider text-[var(--color-fg-muted)] mb-2">Name <span class="text-[var(--color-fg-dim)] normal-case font-normal">(optional)</span></label>
+          <label for="waitlist-name" class="block text-xs font-semibold uppercase tracking-wider text-[var(--color-fg-muted)] mb-2">Full name <span class="text-[var(--color-fg-dim)] normal-case font-normal">(optional)</span></label>
           <input
             id="waitlist-name"
-            name="firstName"
+            name="fullName"
             type="text"
-            autocomplete="given-name"
-            placeholder="Jane"
+            autocomplete="name"
+            placeholder="Jane Smith"
             class="w-full rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface-2)] px-4 py-2.5 text-sm text-[var(--color-fg-strong)] placeholder:text-[var(--color-fg-dim)] focus:border-[var(--color-brand)] focus:outline-none focus:ring-2 focus:ring-[var(--color-brand)]/20 transition"
           />
         </div>
@@ -176,7 +176,21 @@ const formId = import.meta.env.PUBLIC_LOOPS_FORM_ID || "";
 
       var data = new FormData(form);
       var body = new URLSearchParams();
-      data.forEach(function (value, key) { body.append(key, String(value)); });
+      data.forEach(function (value, key) {
+        if (key === "fullName") {
+          var full = String(value).trim().replace(/\s+/g, " ");
+          if (!full) return;
+          var idx = full.indexOf(" ");
+          if (idx === -1) {
+            body.append("firstName", full);
+          } else {
+            body.append("firstName", full.slice(0, idx));
+            body.append("lastName", full.slice(idx + 1));
+          }
+          return;
+        }
+        body.append(key, String(value));
+      });
 
       fetch("https://app.loops.so/api/newsletter-form/" + formId, {
         method: "POST",
