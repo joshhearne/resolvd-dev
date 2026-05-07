@@ -2,10 +2,12 @@
 const { pathname } = Astro.url;
 const links = [
   { href: "/", label: "Overview" },
+  { href: "/email/", label: "Email" },
+  { href: "/vendors/", label: "Vendors" },
   { href: "/pricing/", label: "Pricing" },
-  { href: "/install/", label: "Install Wizard" },
-  { href: "/manual/", label: "Manual Setup" },
+  { href: "/install/", label: "Install" },
   { href: "/docs/", label: "Docs" },
+  { href: "/blog/", label: "Blog" },
 ];
 const isActive = (href: string) =>
   href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -78,6 +80,14 @@ const isActive = (href: string) =>
           >{l.label}</a>
         </li>
       ))}
+      <li>
+        <a
+          href="/manual/"
+          class={`block px-3 py-2.5 rounded-md transition ${isActive("/manual/")
+            ? "text-[var(--color-fg-strong)] bg-[var(--color-surface-2)] border border-[var(--color-border)]"
+            : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] hover:bg-[var(--color-surface)]"}`}
+        >Manual Setup</a>
+      </li>
       <li>
         <a
           href="/changelog/"

@@ -1,0 +1,244 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const flow = [
+  {
+    step: "01",
+    title: "Send to the inbox",
+    body: "Authorized internal users (Admin / Manager / Submitter) email the connected mailbox. Subject prefix routes the project — `#WEB Login button crashes` lands in the project with prefix `WEB`.",
+  },
+  {
+    step: "02",
+    title: "Sender + project checked",
+    body: "Sender must be an active internal user. CC addresses matching active vendor contacts auto-attach. Anything that fails project / sender checks falls into the manual-match queue with a reject reason.",
+  },
+  {
+    step: "03",
+    title: "Body cleaned",
+    body: "Signatures (RFC 3676 `-- `, mobile sigs, Outlook quoted-headers) stripped. The reply-above-this-line marker cuts quoted history. Attachments persist with the same encrypted-at-rest treatment as direct uploads.",
+  },
+  {
+    step: "04",
+    title: "Dedup before create",
+    body: "Same project + same submitter + identical title within 7 days → body appended to the existing ticket as a comment. Similar title within 24h → bails to the queue with `possible_dup:WEB-0042` so an admin decides.",
+  },
+  {
+    step: "05",
+    title: "Confirmation back",
+    body: "Ticket reference goes to the originator only — CCs are never re-mailed by auto-create to avoid loop noise.",
+  },
+];
+
+const banners = [
+  { name: "Inky", note: "VIP / external-sender banners with ZWNJ runs" },
+  { name: "Mimecast", note: "Impersonation Protect banners" },
+  { name: "Proofpoint", note: "External / first-time-sender warnings" },
+  { name: "Avanan", note: "Suspicious / external banners" },
+];
+
+const providers = [
+  {
+    name: "Microsoft 365",
+    note: "Graph API",
+    body: "OAuth flow via the same Entra App Registration that powers SSO. Inbox monitoring uses `/subscriptions` validated with `clientState`, renewed every ~70h. Refresh tokens encrypted under the workspace key.",
+  },
+  {
+    name: "Gmail",
+    note: "Gmail API",
+    body: "OAuth flow with Workspace + consumer support. Inbox monitoring uses `users.watch` against a configured Pub/Sub topic, resumes on `historyId`, renewed every 7 days.",
+  },
+  {
+    name: "SMTP",
+    note: "Legacy fallback",
+    body: "For self-hosters where OAuth isn't an option. Use Gmail / Workspace App Passwords (`smtp.gmail.com:587`, STARTTLS). Microsoft and Google are deprecating SMTP basic auth — prefer OAuth where you can.",
+  },
+];
+---
+
+<Layout title="Email-to-Ticket — Resolvd" description="How Resolvd turns inbound mail into tickets, routes helpdesk inboxes, and keeps vendor replies clean.">
+  <section class="relative overflow-hidden">
+    <div class="mx-auto max-w-4xl px-6 pt-20 pb-12 md:pt-28">
+      <span class="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1 text-xs text-[var(--color-fg-muted)]">
+        <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-brand)] shadow-[0_0_8px_var(--color-brand)]"></span>
+        Email pipeline
+      </span>
+      <h1 class="mt-2 text-4xl md:text-6xl font-bold tracking-tight leading-[1.05]">
+        Tickets <span class="text-[var(--color-brand)]">via email</span>. End to end.
+      </h1>
+      <p class="mt-6 text-lg text-[var(--color-fg-muted)] leading-relaxed max-w-2xl">
+        Email is still where most issues start. Resolvd treats it as a first-class transport: inbound auto-create, helpdesk routing, banner stripping, vendor replies that thread cleanly. No copy-paste, no broken loops.
+      </p>
+      <div class="mt-10 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-1">
+        <div class="rounded-lg bg-[#050810] p-5 font-mono text-xs leading-relaxed">
+          <span class="text-[var(--color-fg-dim)]">To:</span> <span class="text-[#cbd5e1]">inbound@yourdomain.com</span><br />
+          <span class="text-[var(--color-fg-dim)]">Cc:</span> <span class="text-[#cbd5e1]">jane@vendor.com</span><br />
+          <span class="text-[var(--color-fg-dim)]">Subject:</span> <span class="text-emerald-300">#WEB</span> <span class="text-[#cbd5e1]">Login button crashes on submit</span><br /><br />
+          <span class="text-[#cbd5e1]">Steps to reproduce:<br />
+          1. Click submit<br />
+          2. ...</span>
+        </div>
+      </div>
+    </div>
+    <div class="pointer-events-none absolute inset-x-0 top-0 h-[500px] -z-10 opacity-[0.04]" style="background-image: linear-gradient(to right, var(--color-fg-strong) 1px, transparent 1px), linear-gradient(to bottom, var(--color-fg-strong) 1px, transparent 1px); background-size: 32px 32px;"></div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="max-w-2xl">
+        <h2 class="text-3xl md:text-4xl font-bold tracking-tight">From inbox to ticket.</h2>
+        <p class="mt-4 text-[var(--color-fg-muted)]">Five steps the auto-create flow runs on every inbound message.</p>
+      </div>
+      <ol class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-4">
+        {flow.map(s => (
+          <li class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+            <div class="flex items-baseline gap-3 mb-2">
+              <span class="font-mono text-xs text-[var(--color-brand)] tracking-wider">{s.step}</span>
+              <h3 class="font-semibold text-[var(--color-fg-strong)]">{s.title}</h3>
+            </div>
+            <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed" set:html={s.body.replace(/`([^`]+)`/g, '<code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">$1</code>')}></p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="grid md:grid-cols-2 gap-12 items-start">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Helpdesk pattern</span>
+          <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">One mailbox, <span class="text-[var(--color-brand)]">one queue</span>.</h2>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            Scope a connected mailbox to a single project. Inbound mail with no <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">#PREFIX</code> auto-creates tickets there. Mailbox = dedicated queue, no subject discipline required from senders.
+          </p>
+          <ul class="mt-6 space-y-3 text-sm">
+            <li class="flex gap-3"><span class="text-[var(--color-brand)] font-mono">→</span><span class="text-[var(--color-fg-muted)]">Many-to-many scope: same mailbox can serve <strong class="text-[var(--color-fg-strong)]">send</strong> for multiple projects, <strong class="text-[var(--color-fg-strong)]">recv</strong> for one.</span></li>
+            <li class="flex gap-3"><span class="text-[var(--color-brand)] font-mono">→</span><span class="text-[var(--color-fg-muted)]">Manager-created single-scope assignments fire an <strong class="text-[var(--color-fg-strong)]">Admin approval</strong> notification before auto-routing activates.</span></li>
+            <li class="flex gap-3"><span class="text-[var(--color-brand)] font-mono">→</span><span class="text-[var(--color-fg-muted)]">Outbound resolution prefers a scoped <code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">send_enabled</code> account over the global active mailbox.</span></li>
+          </ul>
+        </div>
+        <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-1">
+          <div class="rounded-lg bg-[#050810] p-5 font-mono text-xs leading-relaxed">
+            <div class="text-[var(--color-fg-dim)]"># Admin → Email backends → support@acme.com</div>
+            <div class="text-[#cbd5e1] mt-3">
+              <span class="text-violet-300">Project scope:</span><br />
+              &nbsp;&nbsp;<span class="text-emerald-300">▸</span> <span class="text-[#cbd5e1]">helpdesk</span> <span class="text-[var(--color-fg-dim)]">(send + recv)</span><br /><br />
+              <span class="text-violet-300">Inbound without #PREFIX</span><br />
+              &nbsp;&nbsp;→ auto-creates in <span class="text-emerald-300">helpdesk</span><br /><br />
+              <span class="text-violet-300">Status:</span> <span class="text-emerald-300">approved by admin</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="max-w-2xl">
+        <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Mail-security gateways</span>
+        <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Strip the banner. Keep the reply.</h2>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          Gateways inject <em>EXTERNAL SENDER</em> / VIP / first-time-sender banners <strong class="text-[var(--color-fg-strong)]">above</strong> the user's reply. Cutting at the banner discards real content. Per-account regex patterns remove banners inline before the body lands in the queue.
+        </p>
+        <p class="mt-4 text-sm text-[var(--color-fg-muted)] leading-relaxed">
+          <strong class="text-[var(--color-fg-strong)]">Try the gateway first.</strong> If your inbox is a licensed resource mailbox, most gateways let you suppress recipient banners per-mailbox while keeping malware / phishing scans active — cleaner than regex.
+        </p>
+      </div>
+      <div class="mt-10 grid grid-cols-2 md:grid-cols-4 gap-3">
+        {banners.map(b => (
+          <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4">
+            <div class="font-semibold text-[var(--color-fg-strong)]">{b.name}</div>
+            <p class="mt-1.5 text-xs text-[var(--color-fg-muted)] leading-relaxed">{b.note}</p>
+            <div class="mt-3 inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-[var(--color-brand)] font-semibold">
+              <span class="font-mono">▸</span> Preset
+            </div>
+          </div>
+        ))}
+      </div>
+      <p class="mt-6 text-xs text-[var(--color-fg-dim)]">Patterns are validated as <code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">RegExp</code> on save and applied case-insensitive multi-line. Add your own under Admin → Email backends → {`{account}`} → Inbound banner stripping.</p>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="max-w-2xl">
+        <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Vendor outbound</span>
+        <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Reply-above-this-line. <span class="text-[var(--color-brand)]">Sender via SiteName.</span></h2>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          Every vendor outbound prepends a visible <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">--- Type your reply above this line — ticket {`{ref}`} ---</code> divider. The inbound parser cuts at the marker so quoted history, mail-client headers, and signatures drop automatically. The comment ends up as exactly what the vendor typed.
+        </p>
+      </div>
+      <div class="mt-10 grid md:grid-cols-2 gap-6">
+        <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-1">
+          <div class="rounded-lg bg-[#050810] p-5 font-mono text-xs leading-relaxed">
+            <div class="text-[var(--color-fg-dim)]"># From identity (no spoofing)</div>
+            <div class="mt-3 text-[#cbd5e1]">
+              <span class="text-violet-300">From:</span> <span class="text-emerald-300">"Josh Hearne via Resolvd"</span><br />
+              &nbsp;&nbsp;&nbsp;&nbsp;&lt;<span class="text-[#cbd5e1]">resolvd@motorhomesoftexas.com</span>&gt;<br />
+              <span class="text-violet-300">Reply-To:</span> <span class="text-[#cbd5e1]">resolvd@motorhomesoftexas.com</span><br />
+              <span class="text-violet-300">Auto-Submitted:</span> <span class="text-[#cbd5e1]">auto-generated</span><br />
+              <span class="text-violet-300">X-Resolvd-No-Reply:</span> <span class="text-[#cbd5e1]">1</span>
+            </div>
+            <div class="mt-3 text-[var(--color-fg-muted)] leading-relaxed">
+              <span class="text-[var(--color-brand)]">▸</span> No Exchange Send-As permission required<br />
+              <span class="text-[var(--color-brand)]">▸</span> Anti-spoof gateways recognise `via` as legitimate<br />
+              <span class="text-[var(--color-brand)]">▸</span> Display name = acting human; envelope = mailbox
+            </div>
+          </div>
+        </div>
+        <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+          <h3 class="font-semibold text-[var(--color-fg-strong)]">Send As — pick a real human</h3>
+          <p class="mt-3 text-sm text-[var(--color-fg-muted)] leading-relaxed">
+            When an Admin or Manager sends a vendor-visible comment or clicks Notify Vendor, a Send As prompt picks the sender identity:
+          </p>
+          <ul class="mt-4 space-y-2.5 text-sm text-[var(--color-fg-muted)]">
+            <li class="flex gap-2.5"><span class="text-[var(--color-brand)] font-mono mt-0.5">→</span><span><strong class="text-[var(--color-fg-strong)]">Send as me</strong> — outbound uses the acting Admin's name / email.</span></li>
+            <li class="flex gap-2.5"><span class="text-[var(--color-brand)] font-mono mt-0.5">→</span><span><strong class="text-[var(--color-fg-strong)]">Send as submitter</strong> — outbound uses the ticket's submitter as the sender.</span></li>
+            <li class="flex gap-2.5"><span class="text-[var(--color-brand)] font-mono mt-0.5">→</span><span><strong class="text-[var(--color-fg-strong)]">Send / Submit as</strong> (no submitter) — pick any project member; one-off, or backfill the ticket's submitter.</span></li>
+          </ul>
+          <p class="mt-4 text-xs text-[var(--color-fg-dim)]">Goal: drop the rate of vendor mail leaking out under the system's MAIL_FROM fallback.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="max-w-2xl">
+        <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Provider adapters</span>
+        <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Connect once. <span class="text-[var(--color-brand)]">Both directions.</span></h2>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          OAuth-connected mailboxes drive both outbound (vendor mail, follower notifications, assignment emails) and inbound (auto-create + the manual-match queue). Refresh tokens auto-renew before expiry.
+        </p>
+      </div>
+      <div class="mt-10 grid md:grid-cols-3 gap-4">
+        {providers.map(p => (
+          <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+            <div class="flex items-baseline justify-between mb-2">
+              <h3 class="font-semibold text-[var(--color-fg-strong)]">{p.name}</h3>
+              <span class="text-[10px] uppercase tracking-wider text-[var(--color-brand)] font-semibold">{p.note}</span>
+            </div>
+            <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed" set:html={p.body.replace(/`([^`]+)`/g, '<code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">$1</code>')}></p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-3xl px-6 py-20 text-center">
+      <h2 class="text-3xl md:text-4xl font-bold tracking-tight">Wire it up.</h2>
+      <p class="mt-4 text-[var(--color-fg-muted)]">Connect a mailbox under Admin → Email backends. Inbound and outbound work the same whether you're self-hosting or on the hosted plan.</p>
+      <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+        <a href="/install/" class="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--color-brand)] px-5 py-3 text-sm font-semibold text-[#062814] shadow-[0_0_24px_rgba(34,197,94,0.35)] hover:bg-[var(--color-brand-bright)] transition">
+          Install guide
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+        <a href="/vendors/" class="inline-flex items-center justify-center rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-5 py-3 text-sm font-semibold text-[var(--color-fg-strong)] hover:bg-[var(--color-surface-2)] transition">
+          Vendor coordination →
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>

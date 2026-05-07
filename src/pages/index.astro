@@ -11,32 +11,56 @@ const features = [
   {
     icon: "🎯",
     title: "Projects & Tickets",
-    body: "Scoped projects with custom prefixes (WEB-0042). Priority P1–P5, semantic status workflow with auto-close grace, move tickets between projects, inline title edit.",
+    body: "Scoped projects with custom prefixes (WEB-0042). P1–P5 priorities, semantic status chain with one-click Advance, auto-close grace, move between projects, inline title edit.",
+  },
+  {
+    icon: "⚡",
+    title: "Bulk Edit & Merge",
+    body: "Admin Bulk Edit toggle adds checkboxes — change status / assignee / project across up to 500 tickets in one shot. Search-driven Merge picker collapses dupes by ref, title, or description.",
+  },
+  {
+    icon: "📝",
+    title: "Markdown Comments",
+    body: "GitHub Flavored Markdown editor with Write / Preview tabs, formatting toolbar, and Ctrl+B / Ctrl+I / Ctrl+Enter shortcuts. Mobile toolbar collapses to the essentials.",
+  },
+  {
+    icon: "💬",
+    title: "@Mentions + Push",
+    body: "Type @ for project-scoped autocomplete. Mentioned users auto-follow and get in-app notification, email, and (opt-in) browser push via VAPID + service worker.",
+  },
+  {
+    icon: "✉️",
+    title: "Email-to-Ticket",
+    body: "Email #PREFIX to create tickets. Dedup against recent open tickets, signature + reply-marker stripping, CC auto-attach. M365 Graph, Gmail API, or SMTP.",
+    href: "/email/",
+  },
+  {
+    icon: "📬",
+    title: "Helpdesk Routing",
+    body: "Scope a mailbox to one project — inbound mail without #PREFIX auto-creates there. Per-account banner-strip presets (Inky, Mimecast, Proofpoint, Avanan) clean inbound bodies.",
+    href: "/email/",
+  },
+  {
+    icon: "🤝",
+    title: "Vendor CRM",
+    body: "Companies + contacts scoped per project. Admin-gated Notify Vendor button. Per-vendor pill colors hashed from company id — same vendor, same color across users.",
+    href: "/vendors/",
+  },
+  {
+    icon: "🔕",
+    title: "Mute + Daily Digest",
+    body: "Auto-mute noisy vendor replies on a ticket. Followers don't get paged; muted comments collapse into the thread and surface in a daily digest at the configured local time.",
+    href: "/vendors/",
   },
   {
     icon: "🔐",
     title: "Flexible Auth",
-    body: "Microsoft Entra ID, Google OAuth, or local accounts with Argon2. Mix and match. TOTP MFA enforceable per role.",
-  },
-  {
-    icon: "✉️",
-    title: "Email-native",
-    body: "M365 Graph, Gmail API, or SMTP. Create tickets by emailing #PREFIX — dedup, signature stripping, CC auto-attach. Followers paged on changes.",
-  },
-  {
-    icon: "💬",
-    title: "Real Collaboration",
-    body: "Comments, @mentions with auto-follow, Ctrl+Enter posts. Attachments up to 50 MB. Bulk PDF/CSV export, audit trail.",
-  },
-  {
-    icon: "🤝",
-    title: "Vendor Coordination",
-    body: "Built-in CRM: companies + contacts per project. Notify Vendor button gates outbound. Vendor-visible comments, mute toggle, daily digest of muted replies.",
+    body: "Microsoft Entra ID, Google OAuth (Workspace + consumer), or local accounts with Argon2. TOTP MFA enforceable per role; lockout after 8 failed attempts.",
   },
   {
     icon: "🛡️",
     title: "JIT Support Access",
-    body: "Support principals blocked until an admin approves a time-bounded grant (1–14 days). Read-only by default. Every fine-grained access logged.",
+    body: "Support principals blocked until an admin approves a 1–14 day grant. Read-only by default. Every fine-grained access (ticket views, attachment downloads) lands in the audit log.",
   },
   {
     icon: "🔒",
@@ -44,9 +68,11 @@ const features = [
     body: "AES-256-GCM envelope encryption with per-row data keys. HMAC blind index keeps title search working under encryption. Off / Standard / Vault modes.",
   },
   {
-    icon: "📦",
-    title: "Source-available",
-    body: "FSL-1.1 — free to self-host, free for internal commercial use. Auto-converts to Apache 2.0 after 2 years.",
+    icon: "📞",
+    title: "NATO Phonetic Readback",
+    body: "Hover any ticket ref to spell it for vendor calls — WEB-0079 → \"Whiskey Echo Bravo · 0 0 7 9\". Org + per-user toggles. Pair with AlphabetSoup for general spelling.",
+    href: "https://alphabetsoup.app",
+    external: true,
   },
 ];
 ---
@@ -95,13 +121,37 @@ const features = [
         <p class="mt-4 text-[var(--color-fg-muted)]">Built for engineering, support, and ops teams who've outgrown a spreadsheet but don't want to onboard a sales rep.</p>
       </div>
       <div class="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {features.map(f => (
-          <div class="group rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 hover:border-[var(--color-border-strong)] hover:bg-[var(--color-surface-2)] transition">
-            <div class="text-2xl mb-3">{f.icon}</div>
-            <h3 class="font-semibold text-[var(--color-fg-strong)] mb-1.5">{f.title}</h3>
-            <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed">{f.body}</p>
-          </div>
-        ))}
+        {features.map(f => {
+          const Tag = f.href ? "a" : "div";
+          const linkProps = f.href
+            ? f.external
+              ? { href: f.href, target: "_blank", rel: "noopener" }
+              : { href: f.href }
+            : {};
+          return (
+            <Tag
+              {...linkProps}
+              class={`group rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5 hover:border-[var(--color-border-strong)] hover:bg-[var(--color-surface-2)] transition ${f.href ? "block" : ""}`}
+            >
+              <div class="flex items-start justify-between mb-3">
+                <div class="text-2xl">{f.icon}</div>
+                {f.href && (
+                  <span class="text-[var(--color-fg-dim)] group-hover:text-[var(--color-brand)] transition opacity-0 group-hover:opacity-100">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">{f.external ? <><path d="M7 17L17 7"/><path d="M8 7h9v9"/></> : <path d="M5 12h14M13 5l7 7-7 7"/>}</svg>
+                  </span>
+                )}
+              </div>
+              <h3 class="font-semibold text-[var(--color-fg-strong)] mb-1.5">{f.title}</h3>
+              <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed">{f.body}</p>
+              {f.href && (
+                <span class="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[var(--color-brand)] opacity-80 group-hover:opacity-100 transition">
+                  {f.external ? "Visit" : "Learn more"}
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-0.5 transition-transform">{f.external ? <><path d="M7 17L17 7"/><path d="M8 7h9v9"/></> : <path d="M5 12h14M13 5l7 7-7 7"/>}</svg>
+                </span>
+              )}
+            </Tag>
+          );
+        })}
       </div>
     </div>
   </section>
