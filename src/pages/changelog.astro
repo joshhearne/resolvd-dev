@@ -1,9 +1,15 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { getReleases, formatDate } from "../lib/releases";
+import { getCollection } from "astro:content";
 
 const releases = await getReleases();
 const hasReleases = releases.length > 0;
+
+const posts = await getCollection("blog", ({ data }) => !data.draft);
+const postByTag = new Map<string, string>(
+  posts.filter(p => p.data.tag).map(p => [p.data.tag as string, p.id])
+);
 ---
 
 <Layout title="Changelog — Resolvd" description="Release notes for Resolvd. Pulled directly from GitHub Releases.">
@@ -37,38 +43,47 @@ const hasReleases = releases.length > 0;
         </div>
       ) : (
         <ol class="relative space-y-10 border-l border-[var(--color-border)] pl-8">
-          {releases.map((r, i) => (
-            <li class="relative">
-              <span class={`absolute -left-[37px] top-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full border-2 ${i === 0 ? "border-[var(--color-brand)] bg-[var(--color-brand)] shadow-[0_0_12px_var(--color-brand)]" : "border-[var(--color-border-strong)] bg-[var(--color-surface)]"}`}></span>
-              <article class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-7 hover:border-[var(--color-border-strong)] transition">
-                <header class="flex flex-wrap items-baseline gap-3 mb-4">
-                  <h2 class="text-2xl font-bold tracking-tight">
-                    <a href={r.url} target="_blank" rel="noopener" class="hover:text-[var(--color-brand)] transition">
-                      {r.name}
+          {releases.map((r, i) => {
+            const blogSlug = postByTag.get(r.tag);
+            return (
+              <li class="relative" id={r.tag}>
+                <span class={`absolute -left-[37px] top-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full border-2 ${i === 0 ? "border-[var(--color-brand)] bg-[var(--color-brand)] shadow-[0_0_12px_var(--color-brand)]" : "border-[var(--color-border-strong)] bg-[var(--color-surface)]"}`}></span>
+                <article class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-7 hover:border-[var(--color-border-strong)] transition">
+                  <header class="flex flex-wrap items-baseline gap-3 mb-4">
+                    <h2 class="text-2xl font-bold tracking-tight">
+                      <a href={r.url} target="_blank" rel="noopener" class="hover:text-[var(--color-brand)] transition">
+                        {r.name}
+                      </a>
+                    </h2>
+                    {r.prerelease && (
+                      <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                        Pre-release
+                      </span>
+                    )}
+                    {i === 0 && !r.prerelease && (
+                      <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded bg-[var(--color-brand)]/15 text-[var(--color-brand)] border border-[var(--color-brand)]/30">
+                        Latest
+                      </span>
+                    )}
+                    <span class="text-xs text-[var(--color-fg-dim)] font-mono ml-auto">
+                      {r.tag} · {formatDate(r.publishedAt)}
+                    </span>
+                  </header>
+                  {blogSlug && (
+                    <a href={`/blog/${blogSlug}/`} class="group mb-4 inline-flex items-center gap-2 rounded-lg border border-[var(--color-brand)]/30 bg-[var(--color-brand)]/10 px-3 py-2 text-xs font-semibold text-[var(--color-brand)] hover:bg-[var(--color-brand)]/15 hover:border-[var(--color-brand)]/50 transition">
+                      <span>📝 Read the {r.tag} post</span>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-0.5 transition-transform"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
                     </a>
-                  </h2>
-                  {r.prerelease && (
-                    <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                      Pre-release
-                    </span>
                   )}
-                  {i === 0 && !r.prerelease && (
-                    <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded bg-[var(--color-brand)]/15 text-[var(--color-brand)] border border-[var(--color-brand)]/30">
-                      Latest
-                    </span>
+                  {r.bodyHtml ? (
+                    <div class="changelog-body" set:html={r.bodyHtml}></div>
+                  ) : (
+                    <p class="text-sm text-[var(--color-fg-dim)] italic">No release notes provided.</p>
                   )}
-                  <span class="text-xs text-[var(--color-fg-dim)] font-mono ml-auto">
-                    {r.tag} · {formatDate(r.publishedAt)}
-                  </span>
-                </header>
-                {r.bodyHtml ? (
-                  <div class="changelog-body" set:html={r.bodyHtml}></div>
-                ) : (
-                  <p class="text-sm text-[var(--color-fg-dim)] italic">No release notes provided.</p>
-                )}
-              </article>
-            </li>
-          ))}
+                </article>
+              </li>
+            );
+          })}
         </ol>
       )}
     </div>
