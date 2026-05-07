@@ -1,0 +1,171 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { getCollection, render } from "astro:content";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog", ({ data }) => !data.draft);
+  return posts.map(post => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+function formatDate(d: Date): string {
+  return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+}
+---
+
+<Layout title={`${post.data.title} — Resolvd`} description={post.data.summary}>
+  <section class="relative overflow-hidden border-b border-[var(--color-border)]">
+    <div class="mx-auto max-w-3xl px-6 pt-16 pb-10 md:pt-20">
+      <a href="/blog/" class="inline-flex items-center gap-1.5 mb-6 text-xs text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] transition">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 19l-7-7 7-7"/></svg>
+        Back to blog
+      </a>
+      <div class="flex items-center gap-3 flex-wrap mb-4">
+        <span class="text-3xl">{post.data.icon}</span>
+        {post.data.tag && (
+          <span class="font-mono text-xs px-2 py-0.5 rounded bg-[var(--color-brand)]/15 text-[var(--color-brand)] tabular-nums">{post.data.tag}</span>
+        )}
+        <span class="text-xs text-[var(--color-fg-dim)]">{formatDate(post.data.publishDate)}</span>
+      </div>
+      <h1 class="text-3xl md:text-5xl font-bold tracking-tight leading-[1.1]">{post.data.title}</h1>
+      <p class="mt-5 text-lg text-[var(--color-fg-muted)] leading-relaxed">{post.data.summary}</p>
+    </div>
+    <div class="pointer-events-none absolute inset-x-0 top-0 h-[300px] -z-10 opacity-[0.04]" style="background-image: linear-gradient(to right, var(--color-fg-strong) 1px, transparent 1px), linear-gradient(to bottom, var(--color-fg-strong) 1px, transparent 1px); background-size: 32px 32px;"></div>
+  </section>
+
+  <section>
+    <article class="mx-auto max-w-3xl px-6 py-12">
+      <div class="post-body">
+        <Content />
+      </div>
+      <div class="mt-16 pt-8 border-t border-[var(--color-border)] flex flex-wrap gap-4 items-center justify-between">
+        <a href="/blog/" class="inline-flex items-center gap-1.5 text-sm text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] transition">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 19l-7-7 7-7"/></svg>
+          More posts
+        </a>
+        <a href="/changelog/" class="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--color-brand)] hover:underline">
+          See changelog
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </article>
+  </section>
+</Layout>
+
+<style is:global>
+  .post-body {
+    color: var(--color-fg-muted);
+    font-size: 1rem;
+    line-height: 1.7;
+  }
+  .post-body h1,
+  .post-body h2,
+  .post-body h3,
+  .post-body h4 {
+    color: var(--color-fg-strong);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .post-body h2 {
+    font-size: 1.625rem;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.25;
+  }
+  .post-body h3 {
+    font-size: 1.125rem;
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+  }
+  .post-body h4 { font-size: 1rem; margin-top: 1.5rem; margin-bottom: 0.4rem; }
+  .post-body > *:first-child { margin-top: 0; }
+  .post-body > *:last-child { margin-bottom: 0; }
+  .post-body p { margin: 1rem 0; }
+  .post-body ul,
+  .post-body ol { margin: 1rem 0; padding-left: 1.5rem; }
+  .post-body ul { list-style: none; padding-left: 0; }
+  .post-body ul li {
+    position: relative;
+    padding-left: 1.4rem;
+    margin: 0.4rem 0;
+  }
+  .post-body ul li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--color-brand);
+    font-family: ui-monospace, monospace;
+    font-weight: 600;
+  }
+  .post-body ol li { margin: 0.4rem 0; }
+  .post-body code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.85em;
+    background: var(--color-surface-2);
+    color: var(--color-brand);
+    padding: 0.1rem 0.4rem;
+    border-radius: 0.25rem;
+    border: 1px solid var(--color-border);
+  }
+  .post-body pre {
+    background: #050810;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    overflow-x: auto;
+    margin: 1rem 0;
+    font-size: 0.875rem;
+  }
+  .post-body pre code {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    color: #cbd5e1;
+  }
+  .post-body a {
+    color: var(--color-brand);
+    text-decoration: none;
+  }
+  .post-body a:hover { text-decoration: underline; }
+  .post-body strong { color: var(--color-fg-strong); }
+  .post-body em { color: var(--color-fg-strong); font-style: italic; }
+  .post-body blockquote {
+    border-left: 3px solid var(--color-brand);
+    padding-left: 1rem;
+    margin: 1rem 0;
+    color: var(--color-fg-dim);
+    font-style: italic;
+  }
+  .post-body hr {
+    border: 0;
+    border-top: 1px solid var(--color-border);
+    margin: 2rem 0;
+  }
+  .post-body img {
+    max-width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid var(--color-border);
+    margin: 1.25rem 0;
+  }
+  .post-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+  }
+  .post-body th,
+  .post-body td {
+    border: 1px solid var(--color-border);
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+  }
+  .post-body th {
+    background: var(--color-surface-2);
+    color: var(--color-fg-strong);
+  }
+</style>

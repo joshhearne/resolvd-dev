@@ -1,0 +1,66 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { getCollection } from "astro:content";
+
+const posts = (await getCollection("blog", ({ data }) => !data.draft))
+  .sort((a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf());
+
+function formatDate(d: Date): string {
+  return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+}
+---
+
+<Layout title="Blog — Resolvd" description="Long-form notes on what's shipping in Resolvd. One post per minor / major release.">
+  <section class="relative overflow-hidden">
+    <div class="mx-auto max-w-3xl px-6 pt-20 pb-10 md:pt-28">
+      <span class="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1 text-xs text-[var(--color-fg-muted)]">
+        <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-brand)] shadow-[0_0_8px_var(--color-brand)]"></span>
+        Blog
+      </span>
+      <h1 class="mt-2 text-4xl md:text-6xl font-bold tracking-tight leading-[1.05]">
+        Notes on what <span class="text-[var(--color-brand)]">shipped</span>.
+      </h1>
+      <p class="mt-6 text-lg text-[var(--color-fg-muted)] leading-relaxed">
+        One post per minor / major release. Drafted at tag time; polished with screenshots after. Patch releases skip the post — see the <a href="/changelog/" class="text-[var(--color-brand)] hover:underline">changelog</a> for those.
+      </p>
+    </div>
+    <div class="pointer-events-none absolute inset-x-0 top-0 h-[400px] -z-10 opacity-[0.04]" style="background-image: linear-gradient(to right, var(--color-fg-strong) 1px, transparent 1px), linear-gradient(to bottom, var(--color-fg-strong) 1px, transparent 1px); background-size: 32px 32px;"></div>
+  </section>
+
+  <section>
+    <div class="mx-auto max-w-3xl px-6 pb-24">
+      {posts.length === 0 ? (
+        <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-10 text-center">
+          <div class="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-brand)]/15 text-[var(--color-brand)] mb-4 font-mono text-xl">▾</div>
+          <h2 class="text-xl font-bold tracking-tight">First post coming soon.</h2>
+          <p class="mt-2 text-sm text-[var(--color-fg-muted)] leading-relaxed">Track shipping progress on <a href="https://github.com/joshhearne/resolvd" target="_blank" rel="noopener" class="text-[var(--color-brand)] hover:underline">GitHub</a>.</p>
+        </div>
+      ) : (
+        <ol class="space-y-4">
+          {posts.map((p, i) => (
+            <li>
+              <a href={`/blog/${p.id}/`} class="group block rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-7 hover:border-[var(--color-brand)]/40 hover:bg-[var(--color-surface-2)] transition">
+                <header class="flex items-baseline gap-3 mb-3 flex-wrap">
+                  <span class="text-2xl">{p.data.icon}</span>
+                  {p.data.tag && (
+                    <span class="font-mono text-xs px-2 py-0.5 rounded bg-[var(--color-brand)]/15 text-[var(--color-brand)] tabular-nums">{p.data.tag}</span>
+                  )}
+                  {i === 0 && (
+                    <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded bg-[var(--color-brand)]/15 text-[var(--color-brand)] border border-[var(--color-brand)]/30">Latest</span>
+                  )}
+                  <span class="text-xs text-[var(--color-fg-dim)] ml-auto">{formatDate(p.data.publishDate)}</span>
+                </header>
+                <h2 class="text-2xl font-bold tracking-tight group-hover:text-[var(--color-brand)] transition">{p.data.title}</h2>
+                <p class="mt-3 text-sm text-[var(--color-fg-muted)] leading-relaxed">{p.data.summary}</p>
+                <div class="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--color-brand)] opacity-80 group-hover:opacity-100 group-hover:gap-2 transition-all">
+                  Read post
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+                </div>
+              </a>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  </section>
+</Layout>
