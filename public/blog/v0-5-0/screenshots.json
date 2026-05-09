@@ -1,0 +1,63 @@
+{
+  "_comment": "Screenshot plan for v0.5.0. Minimal first pass — page renders + h1 confirmation + snapshot. Refine via reshoots: add { click: 'selector' } / { fill: ... } actions to drive specific UI states.",
+  "baseURL": "http://localhost:8091",
+  "viewport": { "width": 1440, "height": 900 },
+  "deviceScaleFactor": 2,
+  "auth": {
+    "url": "/login",
+    "steps": [
+      { "fill":       "input[type=email]",    "value": "${DEMO_EMAIL}" },
+      { "fill":       "input[type=password]", "value": "${DEMO_PASSWORD}" },
+      { "press":      "Enter" },
+      { "waitForURL": "**/dashboard" },
+      { "waitFor":    "h1" }
+    ]
+  },
+  "shots": [
+    {
+      "name": "zabbix-alerts",
+      "url": "/admin/alert-sources",
+      "actions": [
+        { "waitFor": "h1:has-text('Alert sources')" },
+        { "wait": 400 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "canned-responses",
+      "url": "/admin/canned-responses",
+      "actions": [
+        { "waitFor": "h1:has-text('Canned responses')" },
+        { "wait": 400 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "crm-rebuild",
+      "url": "/admin/companies",
+      "actions": [
+        { "waitFor": "h1:has-text('Companies')" },
+        { "wait": 400 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "system-health",
+      "url": "/admin/system-health",
+      "actions": [
+        { "waitFor": "h1:has-text('System health')" },
+        { "wait": 800 }
+      ],
+      "fullPage": true
+    },
+    {
+      "name": "layout-sweep",
+      "url": "/admin/email-backends",
+      "actions": [
+        { "waitFor": "h1:has-text('Email backends')" },
+        { "wait": 400 }
+      ],
+      "fullPage": false
+    }
+  ]
+}
