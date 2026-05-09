@@ -21,7 +21,7 @@ marked.setOptions({ gfm: true, breaks: false });
 async function fetchFromGitHub(): Promise<Release[]> {
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
-    "User-Agent": "resolvd-dev-site",
+    "User-Agent": "resolvd-site",
   };
   const token = import.meta.env.GITHUB_TOKEN || process.env.GITHUB_TOKEN;
   if (token) headers.Authorization = `Bearer ${token}`;
