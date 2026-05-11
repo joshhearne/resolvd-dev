@@ -1,16 +1,34 @@
 ---
 const { pathname } = Astro.url;
-const links = [
+type NavLink = { href: string; label: string; note?: string };
+type NavGroup = { label: string; matchPrefixes: string[]; children: NavLink[] };
+type NavEntry = NavLink | NavGroup;
+
+const links: NavEntry[] = [
   { href: "/", label: "Overview" },
-  { href: "/email/", label: "Email" },
-  { href: "/vendors/", label: "Vendors" },
+  {
+    label: "Features",
+    matchPrefixes: ["/ai/", "/sla/", "/email/", "/vendors/"],
+    children: [
+      { href: "/ai/",      label: "AI Assist",       note: "BYO-AI text rewrite" },
+      { href: "/sla/",     label: "SLA Tracker",     note: "Clocks, pauses, breach fanout" },
+      { href: "/email/",   label: "Email-to-Ticket", note: "Inbound pipeline + queue" },
+      { href: "/vendors/", label: "Vendor CRM",      note: "Companies, contacts, color-coded threads" },
+    ],
+  },
   { href: "/pricing/", label: "Pricing" },
   { href: "/install/", label: "Install" },
-  { href: "/docs/", label: "Docs" },
-  { href: "/blog/", label: "Blog" },
+  { href: "/docs/",    label: "Docs" },
+  { href: "/blog/",    label: "Blog" },
 ];
+
 const isActive = (href: string) =>
   href === "/" ? pathname === "/" : pathname.startsWith(href);
+
+const isGroupActive = (g: NavGroup) =>
+  g.matchPrefixes.some(p => pathname.startsWith(p));
+
+const isGroup = (e: NavEntry): e is NavGroup => "children" in e;
 ---
 
 <header class="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[var(--color-header-bg)] backdrop-blur-md">
@@ -20,7 +38,38 @@ const isActive = (href: string) =>
       <span class="text-lg font-semibold tracking-tight">resolvd<span class="text-[var(--color-brand)]">.</span><span class="text-[var(--color-fg-muted)] font-normal">dev</span></span>
     </a>
     <ul class="hidden md:flex items-center gap-1 text-sm">
-      {links.map(l => (
+      {links.map(l => isGroup(l) ? (
+        <li class="relative group">
+          <button
+            type="button"
+            class={`inline-flex items-center gap-1 px-3 py-1.5 rounded-md transition ${isGroupActive(l)
+              ? "text-[var(--color-fg-strong)] bg-[var(--color-surface-2)] border border-[var(--color-border)]"
+              : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)]"}`}
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            {l.label}
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="opacity-60 transition group-hover:opacity-100 group-focus-within:opacity-100"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 transition absolute left-0 top-full pt-2 w-72 z-50">
+            <ul class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg p-1">
+              {l.children.map(c => (
+                <li>
+                  <a
+                    href={c.href}
+                    class={`block px-3 py-2.5 rounded-md transition ${isActive(c.href)
+                      ? "text-[var(--color-fg-strong)] bg-[var(--color-surface-2)]"
+                      : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] hover:bg-[var(--color-surface-2)]"}`}
+                  >
+                    <div class="font-medium">{c.label}</div>
+                    {c.note && <div class="text-xs text-[var(--color-fg-dim)] mt-0.5">{c.note}</div>}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </li>
+      ) : (
         <li>
           <a
             href={l.href}
@@ -70,7 +119,23 @@ const isActive = (href: string) =>
     class="hidden md:hidden border-t border-[var(--color-border)] bg-[var(--color-header-bg)]"
   >
     <ul class="flex flex-col gap-1 px-6 py-4 text-sm">
-      {links.map(l => (
+      {links.map(l => isGroup(l) ? (
+        <li class="mt-2">
+          <div class="px-3 py-1.5 text-[10px] uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">{l.label}</div>
+          <ul class="flex flex-col gap-1">
+            {l.children.map(c => (
+              <li>
+                <a
+                  href={c.href}
+                  class={`block px-3 py-2.5 rounded-md transition ${isActive(c.href)
+                    ? "text-[var(--color-fg-strong)] bg-[var(--color-surface-2)] border border-[var(--color-border)]"
+                    : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] hover:bg-[var(--color-surface)]"}`}
+                >{c.label}</a>
+              </li>
+            ))}
+          </ul>
+        </li>
+      ) : (
         <li>
           <a
             href={l.href}

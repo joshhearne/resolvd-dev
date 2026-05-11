@@ -1,0 +1,243 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+const providers = [
+  {
+    name: "OpenAI",
+    body: "Native + OpenAI-compatible endpoints — Azure OpenAI, OpenRouter, vLLM, LM Studio. Helper banner links to platform.openai.com/api-keys; live model fetch via /v1/models.",
+  },
+  {
+    name: "Anthropic",
+    body: "Claude Messages API (Haiku / Sonnet / Opus tiers). Helper banner links to console.anthropic.com/settings/keys. Surprisingly strong on rewrite tasks for the price.",
+  },
+  {
+    name: "Ollama",
+    body: "Self-hosted — no key needed. Helper banner links to ollama.com/library. Live model list via /api/tags. Set the endpoint to your local or LAN Ollama instance.",
+  },
+];
+
+const surfaces = [
+  "Internal comments",
+  "Vendor comments (auto-flips when 'Share with vendor' is on)",
+  "Ticket title (single-line, terse-default)",
+  "Ticket description",
+  "Canned response body",
+  "Project description",
+  "Admin email templates (Subject + Body — preserves {tag.path} substitutions verbatim)",
+];
+
+const tones = ["neutral", "formal", "friendly", "polite", "apologetic", "terse", "funny"];
+const verbosities = ["short", "functional", "verbose"];
+
+const audienceTiers = [
+  { label: "Author + Admin", note: "Default. Only the author and admins see the badge on a given comment." },
+  { label: "Admin only", note: "Tighter — even the author can't audit their own AI usage afterwards." },
+  { label: "All internal users", note: "Maximum transparency. Vendors never see it regardless." },
+];
+
+const errorKinds = [
+  { kind: "auth", friendly: "API key invalid — double-check it in your provider's console" },
+  { kind: "billing", friendly: "Provider account billing failed — top up credits" },
+  { kind: "rate_limit", friendly: "Rate limited — wait a moment and try again" },
+  { kind: "model_not_found", friendly: "Model not available for your account — pick another from the list" },
+  { kind: "bad_request", friendly: "Provider rejected the request — check the model + endpoint" },
+  { kind: "server_error", friendly: "Provider is having issues — try again shortly" },
+  { kind: "network", friendly: "Couldn't reach the provider — check network + endpoint URL" },
+];
+---
+
+<Layout title="AI Assist — Resolvd" description="BYO-AI text rewrite — pluggable OpenAI / Anthropic / Ollama adapters, per-project glossary, org-managed key with lock + BYOK, usage disclosure badge, friendly errors.">
+  <section class="relative overflow-hidden">
+    <div class="mx-auto max-w-4xl px-6 pt-20 pb-12 md:pt-28">
+      <span class="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1 text-xs text-[var(--color-fg-muted)]">
+        <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-brand)] shadow-[0_0_8px_var(--color-brand)]"></span>
+        BYO-AI rewrite
+      </span>
+      <h1 class="mt-2 text-4xl md:text-6xl font-bold tracking-tight leading-[1.05]">
+        AI that <span class="text-[var(--color-brand)]">respects your wallet.</span>
+      </h1>
+      <p class="mt-6 text-lg text-[var(--color-fg-muted)] leading-relaxed max-w-2xl">
+        A ✨ AI button on every composer. You bring the key — OpenAI, Anthropic, Ollama, or anything OpenAI-compatible. Per-project glossary primes the model with your lingo. Org-managed mode locks the whole team to one provider; BYOK mode lets users wire their own. Usage badge ships full transparency.
+      </p>
+      <div class="mt-10 flex flex-wrap gap-2">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-[var(--color-brand)]/40 bg-[var(--color-brand)]/10 text-xs font-semibold text-[var(--color-brand)] tracking-wider uppercase">
+          <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-brand)]"></span> Your key
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-purple-400/40 bg-purple-400/10 text-xs font-semibold text-purple-300 tracking-wider uppercase">
+          <span class="h-1.5 w-1.5 rounded-full bg-purple-300"></span> Your model
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-cyan-400/40 bg-cyan-400/10 text-xs font-semibold text-cyan-300 tracking-wider uppercase">
+          <span class="h-1.5 w-1.5 rounded-full bg-cyan-300"></span> Your data
+        </span>
+      </div>
+    </div>
+    <div class="pointer-events-none absolute inset-x-0 top-0 h-[500px] -z-10 opacity-[0.04]" style="background-image: linear-gradient(to right, var(--color-fg-strong) 1px, transparent 1px), linear-gradient(to bottom, var(--color-fg-strong) 1px, transparent 1px); background-size: 32px 32px;"></div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="max-w-2xl">
+        <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Three adapters out of the box</span>
+        <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Pluggable providers. <span class="text-[var(--color-brand)]">No vendor lock.</span></h2>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          New providers drop in by adding a file under <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">backend/services/aiProviders/</code> and registering in <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">index.js</code>. Each adapter ships a curated <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">recommendedModels</code> list (cheap / balanced / heavy tiers) plus a Refresh button that pulls the live model catalog.
+        </p>
+      </div>
+      <div class="mt-10 grid md:grid-cols-3 gap-4">
+        {providers.map(p => (
+          <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+            <h3 class="font-semibold text-[var(--color-fg-strong)] mb-2">{p.name}</h3>
+            <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed">{p.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="grid md:grid-cols-2 gap-12 items-start">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Every composer</span>
+          <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">✨ AI button, <span class="text-[var(--color-brand)]">everywhere it makes sense</span>.</h2>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            One click opens a preview-before-send modal. Pick tone, verbosity, optionally ELI5 mode (Admin / Manager only). Side-by-side original / rewritten panes. Apply commits, Re-roll generates a new variant, Cancel discards.
+          </p>
+          <ul class="mt-6 space-y-2.5 text-sm">
+            {surfaces.map(s => (
+              <li class="flex gap-3"><span class="text-[var(--color-brand)] font-mono">→</span><span class="text-[var(--color-fg-muted)]">{s}</span></li>
+            ))}
+          </ul>
+        </div>
+        <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-1">
+          <div class="rounded-lg bg-[#050810] p-5 text-xs leading-relaxed">
+            <div class="font-mono text-[var(--color-fg-dim)]"># Rewrite modal</div>
+            <div class="mt-4 space-y-2 font-mono text-[#cbd5e1]">
+              <div><span class="text-[var(--color-fg-dim)]">Tone:</span> <span class="text-[var(--color-brand)]">{tones.join(" · ")}</span></div>
+              <div><span class="text-[var(--color-fg-dim)]">Verbosity:</span> <span class="text-[var(--color-brand)]">{verbosities.join(" · ")}</span></div>
+              <div><span class="text-[var(--color-fg-dim)]">ELI5:</span> <span class="text-amber-300">Admin / Manager</span></div>
+            </div>
+            <div class="mt-5 text-[var(--color-fg-muted)] leading-relaxed">
+              <div><span class="text-[var(--color-brand)]">▸</span> Original / Rewritten side-by-side</div>
+              <div><span class="text-[var(--color-brand)]">▸</span> Apply · Re-roll · Cancel</div>
+              <div><span class="text-[var(--color-brand)]">▸</span> Tokens + provider stamped on the comment</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="max-w-2xl">
+        <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Project context glossary</span>
+        <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Teach the model <span class="text-[var(--color-brand)]">your lingo</span>.</h2>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          At <strong class="text-[var(--color-fg-strong)]">Admin → Integrations → AI Assist → Project contexts</strong>, paste a markdown glossary per project — sites, integrations, acronyms, internal jargon. Up to 8000 chars. Gets prepended to every rewrite fired from a ticket in that project so the model uses your terms verbatim instead of generic alternates.
+        </p>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          Three layers of opt-in (org admin / project admin / per-user) all must be ON for the context to ship. Per-comment badge shows when the glossary actually fired.
+        </p>
+      </div>
+      <div class="mt-10 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-1">
+        <div class="rounded-lg bg-[#050810] p-5 font-mono text-xs leading-relaxed">
+          <div class="text-[var(--color-fg-dim)]"># projects.ai_context_md (Acme Helpdesk)</div>
+          <div class="mt-3 text-[#cbd5e1]">
+            <span class="text-[var(--color-brand)]">## Sites</span><br />
+            <span class="text-[var(--color-fg-muted)]">- HQ-DFW (Dallas, primary)</span><br />
+            <span class="text-[var(--color-fg-muted)]">- BR-AUS (Austin branch, 40 users)</span><br /><br />
+            <span class="text-[var(--color-brand)]">## Integrations</span><br />
+            <span class="text-[var(--color-fg-muted)]">- M365 tenant: acme.onmicrosoft.com</span><br />
+            <span class="text-[var(--color-fg-muted)]">- Backup: Veeam B&amp;R 12</span><br /><br />
+            <span class="text-[var(--color-brand)]">## Lingo</span><br />
+            <span class="text-[var(--color-fg-muted)]">- "the IT OU" = OU=Corp/Computers/IT</span><br />
+            <span class="text-[var(--color-fg-muted)]">- "the floor" = warehouse VLAN 240</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="grid md:grid-cols-2 gap-12 items-start">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Org-managed vs BYOK</span>
+          <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Lock the team. <span class="text-[var(--color-brand)]">Or don't.</span></h2>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            Set an org provider + encrypted org API key at <strong class="text-[var(--color-fg-strong)]">Admin → Integrations → AI Assist</strong>. Permissions tab picks how users interact:
+          </p>
+          <ul class="mt-5 space-y-3 text-sm">
+            <li class="flex gap-3"><span class="text-[var(--color-brand)] font-mono">→</span><span class="text-[var(--color-fg-muted)]"><strong class="text-[var(--color-fg-strong)]">Lock to org config</strong> — every rewrite uses the org key. No override.</span></li>
+            <li class="flex gap-3"><span class="text-[var(--color-brand)] font-mono">→</span><span class="text-[var(--color-fg-muted)]"><strong class="text-[var(--color-fg-strong)]">Allow user BYOK</strong> — personal credentials override the org fallback.</span></li>
+            <li class="flex gap-3"><span class="text-[var(--color-brand)] font-mono">→</span><span class="text-[var(--color-fg-muted)]"><strong class="text-[var(--color-fg-strong)]">Org kill switch</strong> — turns the whole AI surface off org-wide.</span></li>
+          </ul>
+        </div>
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Usage disclosure badge</span>
+          <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Every rewrite is <span class="text-[var(--color-brand)]">stamped</span>.</h2>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            Each AI-rewritten comment + ticket description carries a compact <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">✨ AI</code> pill inline. Hover for the full readout — provider, model, tokens, tone, verbosity, project context flag. Click copies the metadata block to clipboard.
+          </p>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed text-sm">Org-level audience tier controls who sees the badge:</p>
+          <div class="mt-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)]">
+            {audienceTiers.map(t => (
+              <div class="px-4 py-3">
+                <div class="text-sm font-medium text-[var(--color-fg-strong)]">{t.label}</div>
+                <p class="mt-0.5 text-xs text-[var(--color-fg-muted)] leading-relaxed">{t.note}</p>
+              </div>
+            ))}
+          </div>
+          <p class="mt-3 text-xs text-[var(--color-fg-dim)]">Per-user "Publish my AI usage" override lets users opt their own posts up to org-wide visibility — useful when paying with a personal key and wanting reimbursement.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="max-w-2xl">
+        <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Friendly errors</span>
+        <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Provider broke? <span class="text-[var(--color-brand)]">Get a real answer.</span></h2>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          Adapters wrap non-ok responses + fetch errors in a <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">ProviderError</code> carrying a kind-aware friendly message. Rendered inline with an expandable "Provider details" disclosure containing the raw upstream body for debugging.
+        </p>
+      </div>
+      <div class="mt-10 overflow-x-auto rounded-xl border border-[var(--color-border)]">
+        <table class="w-full text-sm">
+          <thead class="bg-[var(--color-surface-2)] text-left text-xs uppercase tracking-wide text-[var(--color-fg-muted)]">
+            <tr>
+              <th class="px-4 py-3">Kind</th>
+              <th class="px-4 py-3">Friendly message</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-[var(--color-border)]">
+            {errorKinds.map(e => (
+              <tr>
+                <td class="px-4 py-3 font-mono text-[var(--color-brand)]">{e.kind}</td>
+                <td class="px-4 py-3 text-[var(--color-fg-muted)]">{e.friendly}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-3xl px-6 py-20 text-center">
+      <h2 class="text-3xl md:text-4xl font-bold tracking-tight">Wire up your provider.</h2>
+      <p class="mt-4 text-[var(--color-fg-muted)]">Account → Preferences → AI Assist for personal keys. Admin → Integrations → AI Assist for the org config. Test connection verifies before you ship.</p>
+      <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+        <a href="/install/" class="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--color-brand)] px-5 py-3 text-sm font-semibold text-[#062814] shadow-[0_0_24px_rgba(34,197,94,0.35)] hover:bg-[var(--color-brand-bright)] transition">
+          Install guide
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+        <a href="/blog/v0-6-0/" class="inline-flex items-center justify-center rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-5 py-3 text-sm font-semibold text-[var(--color-fg-strong)] hover:bg-[var(--color-surface-2)] transition">
+          v0.6.0 release notes →
+        </a>
+      </div>
+    </div>
+  </section>
+</Layout>
