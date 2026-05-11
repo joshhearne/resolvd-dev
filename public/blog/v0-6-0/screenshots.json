@@ -1,0 +1,109 @@
+{
+  "_comment": "Blog screenshot plan for v0.6.0 — AI rewrite + notifications matrix + SLA tracker + login hardening. Shot against demo :8091 as the seeded admin.",
+  "baseURL": "http://localhost:8091",
+  "viewport": { "width": 1440, "height": 900 },
+  "deviceScaleFactor": 2,
+  "auth": {
+    "url": "/login",
+    "steps": [
+      { "fill":       "input[type=email]",    "value": "${DEMO_EMAIL}" },
+      { "fill":       "input[type=password]", "value": "${DEMO_PASSWORD}" },
+      { "wait": 1100 },
+      { "press":      "Enter" },
+      { "waitForURL": "**/dashboard" },
+      { "waitFor":    "h1" }
+    ]
+  },
+  "shots": [
+    {
+      "name": "hero",
+      "url": "/dashboard",
+      "actions": [
+        { "waitFor": "h1" },
+        { "wait": 600 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "notifications-matrix",
+      "url": "/account/settings/preferences",
+      "viewport": { "width": 1440, "height": 1400 },
+      "actions": [
+        { "waitFor": "h2:has-text('Notifications')" },
+        { "wait": 500 },
+        { "eval": "[...document.querySelectorAll('h2')].find(h => h.textContent.includes('Notifications'))?.scrollIntoView({block:'start'})" },
+        { "wait": 300 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "sla-dashboard",
+      "url": "/dashboard",
+      "actions": [
+        { "waitFor": "h2:has-text('SLA')" },
+        { "wait": 500 },
+        { "eval": "[...document.querySelectorAll('h2')].find(h => h.textContent.includes('SLA'))?.scrollIntoView({block:'start'})" },
+        { "wait": 300 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "ai-prefs-card",
+      "url": "/account/settings/preferences",
+      "viewport": { "width": 1440, "height": 1400 },
+      "actions": [
+        { "waitFor": "h2:has-text('AI Assist')" },
+        { "wait": 500 },
+        { "eval": "[...document.querySelectorAll('h2')].find(h => h.textContent.includes('AI Assist'))?.scrollIntoView({block:'start'})" },
+        { "wait": 300 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "ai-rewrite-modal",
+      "url": "/tickets/1",
+      "actions": [
+        { "waitFor": "textarea, [contenteditable]" },
+        { "wait": 500 },
+        { "scrollTo": "textarea, [contenteditable]" },
+        { "click":    "textarea, [contenteditable]" },
+        { "fill":     "textarea, [contenteditable]", "value": "fanout broke on outbox flusher. BYOK path needs check before merge." },
+        { "wait": 300 },
+        { "click": "button[aria-label='Rewrite with AI']" },
+        { "wait": 800 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "ai-usage-badge-popover",
+      "url": "/tickets/1",
+      "actions": [
+        { "waitFor": "button[aria-label*='AI usage details']" },
+        { "wait": 500 },
+        { "scrollTo": "button[aria-label*='AI usage details']" },
+        { "hover": "button[aria-label*='AI usage details']" },
+        { "wait": 500 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "admin-ai-integration",
+      "url": "/admin/ai-assist",
+      "actions": [
+        { "waitFor": "h2:has-text('Integration')" },
+        { "wait": 500 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "admin-ai-project-contexts",
+      "url": "/admin/ai-assist",
+      "actions": [
+        { "waitFor": "button:has-text('Project contexts')" },
+        { "click": "button:has-text('Project contexts')" },
+        { "wait": 600 }
+      ],
+      "fullPage": false
+    }
+  ]
+}
