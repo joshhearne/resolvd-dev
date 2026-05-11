@@ -24,9 +24,19 @@ const features = [
     body: "GitHub Flavored Markdown editor with Write / Preview tabs, formatting toolbar, and Ctrl+B / Ctrl+I / Ctrl+Enter shortcuts. Mobile toolbar collapses to the essentials.",
   },
   {
+    icon: "✨",
+    title: "BYO-AI Rewrites",
+    body: "Bring your own OpenAI / Anthropic / Ollama key. ✨ AI button on every composer — tone, verbosity, ELI5. Per-project glossary primes the model with your lingo. Org-managed key + lock + usage badge for cost transparency.",
+  },
+  {
+    icon: "⏱️",
+    title: "SLA Tracker",
+    body: "Response + resolve clocks per priority, project-level overrides. Pause-on-blocker excludes vendor / customer wait time. Breach fires immediate in-app + email; MTD dashboard card scoped to your projects.",
+  },
+  {
     icon: "💬",
-    title: "@Mentions + Push",
-    body: "Type @ for project-scoped autocomplete. Mentioned users auto-follow and get in-app notification, email, and (opt-in) browser push via VAPID + service worker.",
+    title: "Mentions + Notifications",
+    body: "@ autocomplete subscribes mentioned users. 6×3 channel matrix (in-app / email / push) per event with email digest cadence — instant, hourly, 12h, or daily. Browser push via VAPID + service worker.",
   },
   {
     icon: "✉️",
@@ -54,8 +64,8 @@ const features = [
   },
   {
     icon: "🔐",
-    title: "Flexible Auth",
-    body: "Microsoft Entra ID, Google OAuth (Workspace + consumer), or local accounts with Argon2. TOTP MFA enforceable per role; lockout after 8 failed attempts.",
+    title: "Flexible Auth + Hardening",
+    body: "Microsoft Entra, Google OAuth, or local with Argon2id. TOTP MFA per role. Login hardened with per-IP rate limit, persistent block on credential stuffing, honeypot + sub-800ms dwell rejection, session regeneration, CSP + HSTS.",
   },
   {
     icon: "🛡️",
