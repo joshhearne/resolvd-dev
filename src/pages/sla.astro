@@ -113,9 +113,9 @@ const roadmap = [
       </div>
       <div class="mt-10 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)]">
         {lifecycle.map(l => (
-          <div class="px-5 py-4 flex items-start gap-4">
-            <span class="font-mono text-xs text-[var(--color-brand)] mt-0.5 shrink-0 min-w-[14ch]">{l.evt}</span>
-            <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed flex-1" set:html={l.action.replace(/`([^`]+)`/g, '<code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">$1</code>')}></p>
+          <div class="px-5 py-4 flex flex-col md:flex-row md:items-start gap-1.5 md:gap-4">
+            <span class="font-mono text-xs text-[var(--color-brand)] md:mt-0.5 md:shrink-0 md:min-w-[14ch]">{l.evt}</span>
+            <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed md:flex-1" set:html={l.action.replace(/`([^`]+)`/g, '<code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">$1</code>')}></p>
           </div>
         ))}
       </div>

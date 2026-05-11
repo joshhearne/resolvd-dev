@@ -1,0 +1,76 @@
+---
+import { listVersions, listTopics, topicSlug } from "../lib/docs";
+
+interface Props {
+  version: string;
+  activeSlug?: string;
+}
+
+const { version, activeSlug } = Astro.props;
+const versions = await listVersions();
+const topics = await listTopics(version);
+const latestVersion = versions[0];
+const isLatest = version === latestVersion;
+---
+
+<div class="mx-auto max-w-6xl px-6 py-12 grid grid-cols-1 md:grid-cols-[14rem_1fr] gap-10">
+  <aside class="md:sticky md:top-24 md:self-start min-w-0">
+    <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3 space-y-4">
+      <div>
+        <label class="block text-[10px] uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold mb-1.5 px-1">Version</label>
+        <div class="relative">
+          <select
+            id="docs-version-switcher"
+            class="w-full appearance-none rounded-md border border-[var(--color-border)] bg-[var(--color-surface-2)] px-3 py-2 pr-8 text-sm text-[var(--color-fg-strong)] font-mono focus:outline-none focus:border-[var(--color-brand)] cursor-pointer"
+            data-active-slug={activeSlug ?? ""}
+          >
+            {versions.map(v => (
+              <option value={v} selected={v === version}>{v}{v === latestVersion ? " · latest" : ""}</option>
+            ))}
+          </select>
+          <span class="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[var(--color-fg-dim)]">▾</span>
+        </div>
+        {!isLatest && (
+          <a href={`/docs/${latestVersion}/`} class="mt-2 block text-[11px] text-amber-400 hover:text-amber-300">
+            ⚠ Viewing older version — jump to latest
+          </a>
+        )}
+      </div>
+      <nav>
+        <div class="text-[10px] uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold mb-1.5 px-1">Topics</div>
+        <ul class="space-y-0.5">
+          {topics.map(t => {
+            const slug = topicSlug(t);
+            const href = `/docs/${version}/${slug}/`;
+            const active = activeSlug === slug;
+            return (
+              <li>
+                <a
+                  href={href}
+                  class={`block px-2.5 py-1.5 text-sm rounded-md transition ${active
+                    ? "bg-[var(--color-surface-2)] text-[var(--color-fg-strong)] border border-[var(--color-border)]"
+                    : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] hover:bg-[var(--color-surface-2)]"}`}
+                >{t.data.title}</a>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+    </div>
+  </aside>
+  <article class="docs-article min-w-0">
+    <slot />
+  </article>
+</div>
+
+<script is:inline>
+  (function () {
+    var sel = document.getElementById("docs-version-switcher");
+    if (!sel) return;
+    sel.addEventListener("change", function () {
+      var v = sel.value;
+      var slug = sel.getAttribute("data-active-slug") || "";
+      window.location.href = slug ? "/docs/" + v + "/" + slug + "/" : "/docs/" + v + "/";
+    });
+  })();
+</script>

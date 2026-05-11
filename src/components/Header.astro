@@ -145,29 +145,34 @@ const isGroup = (e: NavEntry): e is NavGroup => "children" in e;
           >{l.label}</a>
         </li>
       ))}
-      <li>
-        <a
-          href="/manual/"
-          class={`block px-3 py-2.5 rounded-md transition ${isActive("/manual/")
-            ? "text-[var(--color-fg-strong)] bg-[var(--color-surface-2)] border border-[var(--color-border)]"
-            : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] hover:bg-[var(--color-surface)]"}`}
-        >Manual Setup</a>
-      </li>
-      <li>
-        <a
-          href="/changelog/"
-          class={`block px-3 py-2.5 rounded-md transition ${isActive("/changelog/")
-            ? "text-[var(--color-fg-strong)] bg-[var(--color-surface-2)] border border-[var(--color-border)]"
-            : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] hover:bg-[var(--color-surface)]"}`}
-        >Changelog</a>
-      </li>
-      <li class="sm:hidden">
-        <a
-          href="https://github.com/joshhearne/resolvd"
-          target="_blank"
-          rel="noopener"
-          class="block px-3 py-2.5 rounded-md text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] hover:bg-[var(--color-surface)] transition"
-        >GitHub ↗</a>
+      <li class="mt-2">
+        <div class="px-3 py-1.5 text-[10px] uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Resources</div>
+        <ul class="flex flex-col gap-1">
+          <li>
+            <a
+              href="/manual/"
+              class={`block px-3 py-2.5 rounded-md transition ${isActive("/manual/")
+                ? "text-[var(--color-fg-strong)] bg-[var(--color-surface-2)] border border-[var(--color-border)]"
+                : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] hover:bg-[var(--color-surface)]"}`}
+            >Manual Setup</a>
+          </li>
+          <li>
+            <a
+              href="/changelog/"
+              class={`block px-3 py-2.5 rounded-md transition ${isActive("/changelog/")
+                ? "text-[var(--color-fg-strong)] bg-[var(--color-surface-2)] border border-[var(--color-border)]"
+                : "text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] hover:bg-[var(--color-surface)]"}`}
+            >Changelog</a>
+          </li>
+          <li class="sm:hidden">
+            <a
+              href="https://github.com/joshhearne/resolvd"
+              target="_blank"
+              rel="noopener"
+              class="block px-3 py-2.5 rounded-md text-[var(--color-fg-muted)] hover:text-[var(--color-fg-strong)] hover:bg-[var(--color-surface)] transition"
+            >GitHub ↗</a>
+          </li>
+        </ul>
       </li>
     </ul>
   </div>

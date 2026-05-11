@@ -1,0 +1,64 @@
+---
+import { render } from "astro:content";
+import Layout from "../../../layouts/Layout.astro";
+import DocsShell from "../../../components/DocsShell.astro";
+import { listTopics, listVersions, topicSlug, getLatestVersion } from "../../../lib/docs";
+
+export async function getStaticPaths() {
+  const versions = await listVersions();
+  const paths = [];
+  for (const v of versions) {
+    const topics = await listTopics(v);
+    for (const t of topics) {
+      paths.push({ params: { version: v, slug: topicSlug(t) }, props: { entry: t } });
+    }
+  }
+  return paths;
+}
+
+const { version, slug } = Astro.params;
+const { entry } = Astro.props as { entry: any };
+const { Content } = await render(entry);
+const latest = await getLatestVersion();
+const isLatest = version === latest;
+---
+
+<Layout title={`${entry.data.title} — Docs ${version} — Resolvd`} description={entry.data.summary ?? `Resolvd ${entry.data.title} (${version}).`}>
+  <DocsShell version={version!} activeSlug={slug!}>
+    <header class="mb-8">
+      <div class="flex items-center gap-2 mb-2">
+        <a href={`/docs/${version}/`} class="font-mono text-xs px-2 py-0.5 rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-brand)] hover:bg-[var(--color-surface-2)] transition">{version}</a>
+        {isLatest && <span class="text-[10px] uppercase tracking-wider text-emerald-400 font-semibold">Latest</span>}
+        {entry.data.since && <span class="text-[10px] uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Since {entry.data.since}</span>}
+      </div>
+      <h1 class="text-3xl md:text-4xl font-bold tracking-tight">{entry.data.title}</h1>
+      {entry.data.summary && <p class="mt-3 text-[var(--color-fg-muted)] leading-relaxed">{entry.data.summary}</p>}
+    </header>
+    <div class="prose-docs">
+      <Content />
+    </div>
+  </DocsShell>
+</Layout>
+
+<style is:global>
+  .prose-docs { color: var(--color-fg-muted); line-height: 1.7; }
+  .prose-docs h2 { font-size: 1.5rem; font-weight: 700; color: var(--color-fg-strong); margin-top: 2rem; margin-bottom: 0.75rem; letter-spacing: -0.01em; }
+  .prose-docs h3 { font-size: 1.125rem; font-weight: 600; color: var(--color-fg-strong); margin-top: 1.5rem; margin-bottom: 0.5rem; }
+  .prose-docs p { margin-bottom: 1rem; }
+  .prose-docs ul, .prose-docs ol { margin-bottom: 1rem; padding-left: 1.5rem; }
+  .prose-docs ul { list-style: disc; }
+  .prose-docs ol { list-style: decimal; }
+  .prose-docs li { margin-bottom: 0.25rem; }
+  .prose-docs a { color: var(--color-brand); text-decoration: underline; text-underline-offset: 2px; }
+  .prose-docs a:hover { color: var(--color-fg-strong); }
+  .prose-docs strong { color: var(--color-fg-strong); font-weight: 600; }
+  .prose-docs code { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.85em; padding: 0.125rem 0.375rem; border-radius: 0.25rem; background: var(--color-surface-2); color: var(--color-brand); }
+  .prose-docs pre { margin: 1rem 0; padding: 1rem; border-radius: 0.5rem; background: var(--color-surface); border: 1px solid var(--color-border); overflow-x: auto; font-size: 0.875rem; }
+  .prose-docs pre code { background: none; padding: 0; color: var(--color-fg-strong); font-size: inherit; }
+  .prose-docs hr { border: 0; border-top: 1px solid var(--color-border); margin: 2rem 0; }
+  .prose-docs table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.875rem; border: 1px solid var(--color-border); border-radius: 0.5rem; overflow: hidden; }
+  .prose-docs thead { background: var(--color-surface-2); }
+  .prose-docs th { text-align: left; padding: 0.75rem 1rem; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-fg-muted); font-weight: 600; }
+  .prose-docs td { padding: 0.5rem 1rem; border-top: 1px solid var(--color-border); }
+  .prose-docs td:first-child code { color: var(--color-brand); }
+</style>

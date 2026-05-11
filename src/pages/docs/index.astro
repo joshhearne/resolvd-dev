@@ -1,0 +1,5 @@
+---
+import { getLatestVersion } from "../../lib/docs";
+const latest = await getLatestVersion();
+return Astro.redirect(`/docs/${latest}/`, 302);
+---

@@ -1,43 +1,85 @@
 ---
 import { getLatestRelease, formatDate } from "../lib/releases";
 const latest = await getLatestRelease();
+
+const groups = [
+  {
+    label: "Product",
+    links: [
+      { href: "/ai/",      label: "AI Assist" },
+      { href: "/sla/",     label: "SLA Tracker" },
+      { href: "/email/",   label: "Email-to-Ticket" },
+      { href: "/vendors/", label: "Vendor CRM" },
+    ],
+  },
+  {
+    label: "Get started",
+    links: [
+      { href: "/pricing/", label: "Pricing" },
+      { href: "/install/", label: "Install" },
+      { href: "/manual/",  label: "Manual" },
+    ],
+  },
+  {
+    label: "Learn",
+    links: [
+      { href: "/docs/",                                  label: "Docs" },
+      { href: "/blog/",                                  label: "Blog" },
+      { href: "/changelog/",                             label: "Changelog" },
+      { href: "https://github.com/joshhearne/resolvd",   label: "Source", external: true },
+    ],
+  },
+];
 ---
 
 <footer class="mt-32 border-t border-[var(--color-border)] py-10">
-  <div class="mx-auto max-w-6xl px-6 flex flex-col gap-8 text-sm text-[var(--color-fg-muted)]">
-    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-      <div class="flex items-center gap-3">
-        <img src="/icon.svg" alt="" width="24" height="24" class="rounded-md" />
-        <span>Resolvd — self-hosted issue tracking</span>
-      </div>
-      <div class="flex flex-wrap items-center gap-x-5 gap-y-2">
-        <a href="/email/" class="hover:text-[var(--color-fg-strong)] transition">Email</a>
-        <a href="/vendors/" class="hover:text-[var(--color-fg-strong)] transition">Vendors</a>
-        <a href="/pricing/" class="hover:text-[var(--color-fg-strong)] transition">Pricing</a>
-        <a href="/install/" class="hover:text-[var(--color-fg-strong)] transition">Install</a>
-        <a href="/manual/" class="hover:text-[var(--color-fg-strong)] transition">Manual</a>
-        <a href="/docs/" class="hover:text-[var(--color-fg-strong)] transition">Docs</a>
-        <a href="/blog/" class="hover:text-[var(--color-fg-strong)] transition">Blog</a>
-        <a href="/changelog/" class="hover:text-[var(--color-fg-strong)] transition">Changelog</a>
-        <a href="https://github.com/joshhearne/resolvd" target="_blank" rel="noopener" class="hover:text-[var(--color-fg-strong)] transition">Source</a>
-      </div>
-      <div class="flex items-center gap-4 text-xs">
+  <div class="mx-auto max-w-6xl px-6 flex flex-col gap-10 text-sm text-[var(--color-fg-muted)]">
+    <div class="grid grid-cols-1 md:grid-cols-[1.2fr_3fr] gap-10">
+      <div class="flex flex-col gap-3">
+        <div class="flex items-center gap-3">
+          <img src="/icon.svg" alt="" width="28" height="28" class="rounded-md" />
+          <span class="text-[var(--color-fg-strong)] font-semibold">Resolvd</span>
+        </div>
+        <p class="text-xs text-[var(--color-fg-dim)] leading-relaxed max-w-xs">
+          Self-hosted issue tracking. Two clocks, fair pauses, loud breaches.
+        </p>
         {latest && (
-          <a href="/changelog/" class="inline-flex items-center gap-1.5 text-[var(--color-fg-dim)] hover:text-[var(--color-brand)] transition">
+          <a href="/changelog/" class="mt-1 inline-flex items-center gap-1.5 text-xs text-[var(--color-fg-dim)] hover:text-[var(--color-brand)] transition w-fit">
             <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-brand)] shadow-[0_0_6px_var(--color-brand)]"></span>
             <span class="font-mono tabular-nums">{latest.tag}</span>
-            <span class="text-[var(--color-fg-dim)]">· {formatDate(latest.publishedAt)}</span>
+            <span>· {formatDate(latest.publishedAt)}</span>
           </a>
         )}
-        <a href="/license/" class="hover:text-[var(--color-fg-strong)] transition">FSL-1.1</a>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-8">
+        {groups.map(g => (
+          <div class="flex flex-col gap-3">
+            <div class="text-[10px] uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">{g.label}</div>
+            <ul class="flex flex-col gap-2">
+              {g.links.map(l => (
+                <li>
+                  <a
+                    href={l.href}
+                    {...(l.external ? { target: "_blank", rel: "noopener" } : {})}
+                    class="hover:text-[var(--color-fg-strong)] transition"
+                  >{l.label}{l.external && <span class="text-[var(--color-fg-dim)]"> ↗</span>}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
     </div>
-    <div class="flex justify-center pt-2 border-t border-[var(--color-border)]">
-      <a href="https://hearnetech.com" target="_blank" rel="noopener" class="flex items-center gap-3 text-xs text-[var(--color-fg-dim)] hover:text-[var(--color-fg-strong)] transition pt-6">
-        <span>Powered by</span>
-        <img src="/hearne-logo.png" alt="Hearne Technologies" class="hearne-logo-light h-6 w-auto" />
-        <img src="/hearne-logo-dark.png" alt="Hearne Technologies" class="hearne-logo-dark h-6 w-auto" />
-      </a>
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-6 border-t border-[var(--color-border)] text-xs">
+      <span class="text-[var(--color-fg-dim)]">Resolvd — self-hosted issue tracking</span>
+      <div class="flex items-center gap-4">
+        <a href="/license/" class="text-[var(--color-fg-dim)] hover:text-[var(--color-fg-strong)] transition">FSL-1.1</a>
+        <a href="https://hearnetech.com" target="_blank" rel="noopener" class="flex items-center gap-2 text-[var(--color-fg-dim)] hover:text-[var(--color-fg-strong)] transition">
+          <span>Powered by</span>
+          <img src="/hearne-logo.png" alt="Hearne Technologies" class="hearne-logo-light h-5 w-auto" />
+          <img src="/hearne-logo-dark.png" alt="Hearne Technologies" class="hearne-logo-dark h-5 w-auto" />
+        </a>
+      </div>
     </div>
   </div>
 </footer>
