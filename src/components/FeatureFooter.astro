@@ -1,0 +1,35 @@
+---
+import { nextFeature } from "../lib/featureNav";
+
+interface Props {
+  currentHref: string;
+  heading?: string;
+  subhead?: string;
+}
+
+const { currentHref, heading = "Ready to roll it out?", subhead = "Spin up Resolvd in a minute, dig into the docs, or take the next feature for a spin." } = Astro.props;
+const next = nextFeature(currentHref);
+---
+
+<section class="border-t border-[var(--color-border)]">
+  <div class="mx-auto max-w-3xl px-6 py-20 text-center">
+    <h2 class="text-3xl md:text-4xl font-bold tracking-tight">{heading}</h2>
+    <p class="mt-4 text-[var(--color-fg-muted)]">{subhead}</p>
+    <div class="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+      <a href="/install/" class="inline-flex items-center justify-center gap-2 rounded-lg bg-[var(--color-brand)] px-5 py-3 text-sm font-semibold text-[#062814] shadow-[0_0_24px_rgba(34,197,94,0.35)] hover:bg-[var(--color-brand-bright)] transition">
+        Install guide
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </a>
+      <a href="/docs/" class="inline-flex items-center justify-center rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-5 py-3 text-sm font-semibold text-[var(--color-fg-strong)] hover:bg-[var(--color-surface-2)] transition">
+        Read the docs
+      </a>
+      <a href={next.href} class="group inline-flex items-center justify-center gap-2 rounded-lg border border-[var(--color-border-strong)] bg-[var(--color-surface)] px-5 py-3 text-sm font-semibold text-[var(--color-fg-strong)] hover:bg-[var(--color-surface-2)] hover:border-[var(--color-brand)] transition">
+        <span class="flex flex-col items-start leading-tight">
+          <span class="text-[10px] uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold group-hover:text-[var(--color-brand)] transition">Next feature</span>
+          <span>{next.label}</span>
+        </span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-[var(--color-fg-muted)] group-hover:text-[var(--color-brand)] group-hover:translate-x-0.5 transition"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+</section>

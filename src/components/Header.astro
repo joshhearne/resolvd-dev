@@ -1,4 +1,6 @@
 ---
+import { featureNav, featurePrefixes } from "../lib/featureNav";
+
 const { pathname } = Astro.url;
 type NavLink = { href: string; label: string; note?: string };
 type NavGroup = { label: string; matchPrefixes: string[]; children: NavLink[] };
@@ -8,13 +10,8 @@ const links: NavEntry[] = [
   { href: "/", label: "Overview" },
   {
     label: "Features",
-    matchPrefixes: ["/ai/", "/sla/", "/email/", "/vendors/"],
-    children: [
-      { href: "/ai/",      label: "AI Assist",       note: "BYO-AI text rewrite" },
-      { href: "/sla/",     label: "SLA Tracker",     note: "Clocks, pauses, breach fanout" },
-      { href: "/email/",   label: "Email-to-Ticket", note: "Inbound pipeline + queue" },
-      { href: "/vendors/", label: "Vendor CRM",      note: "Companies, contacts, color-coded threads" },
-    ],
+    matchPrefixes: featurePrefixes,
+    children: featureNav,
   },
   { href: "/pricing/", label: "Pricing" },
   { href: "/install/", label: "Install" },

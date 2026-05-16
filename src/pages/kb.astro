@@ -1,0 +1,144 @@
+---
+import Layout from "../layouts/Layout.astro";
+import FeatureFooter from "../components/FeatureFooter.astro";
+
+const editorBlocks = [
+  { name: "Headings",  body: "H1 / H2 / H3 with anchor links auto-generated from slug." },
+  { name: "Lists",     body: "Bulleted, numbered, and checkbox. Nestable." },
+  { name: "Code",      body: "Inline and fenced blocks with syntax highlighting." },
+  { name: "Callouts",  body: "Info / warning / tip / danger variants." },
+  { name: "Tables",    body: "ProseMirror-backed, drag to reorder rows or columns." },
+  { name: "Images",    body: "Drag-drop upload — stored alongside ticket attachments under FSL terms." },
+];
+
+const lifecycle = [
+  { evt: "Draft saved",            action: "Article persists to `kb_articles.content_json` with a plain-text mirror for full-text search." },
+  { evt: "Publish",                action: "Article becomes visible to readers in the project. Submitter / Viewer roles see the rendered surface; never the editor." },
+  { evt: "Edit + save",            action: "New row in `kb_article_versions` with optional change_summary. Old version stays restorable." },
+  { evt: "Restore old version",    action: "Writes a new version row marked `Restored from vN`. Audit chain stays intact — no destructive overwrite." },
+  { evt: "Archive",                action: "Hidden from listings but kept in storage. Tech / Manager / Admin can resurrect." },
+];
+
+const ticketSurfaces = [
+  { title: "Suggestion ranker",     body: "pg_trgm similarity over `title || tags || keywords` vs the ticket title. High-confidence matches auto-surface in the Resolution tab on ticket open." },
+  { title: "Promote-to-KB",          body: "Drafts a new article seeded from the ticket's title + description + resolution_summary, with a `kind='system'` link back to the source ticket." },
+  { title: "Resolution summary nudge", body: "At close time, a small prompt asks the closer to capture a one-line resolution summary. Drives the new \"Fix applied\" filter on the ticket list (`resolution_summary IS NOT NULL OR kb_link EXISTS`)." },
+];
+---
+
+<Layout title="Knowledge Base — Resolvd" description="Per-project knowledge base with a BlockNote rich editor, version history, ticket↔article linking, pg_trgm suggestion ranker, and one-click Promote-to-KB from any resolved ticket.">
+  <section class="relative overflow-hidden">
+    <div class="mx-auto max-w-4xl px-6 pt-20 pb-12 md:pt-28">
+      <span class="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1 text-xs text-[var(--color-fg-muted)]">
+        <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-brand)] shadow-[0_0_8px_var(--color-brand)]"></span>
+        Knowledge Base
+      </span>
+      <h1 class="mt-2 text-4xl md:text-6xl font-bold tracking-tight leading-[1.05]">
+        Tribal knowledge, <span class="text-[var(--color-brand)]">captured.</span>
+      </h1>
+      <p class="mt-6 text-lg text-[var(--color-fg-muted)] leading-relaxed max-w-2xl">
+        Every project owns its own articles. Editors author in BlockNote — a block editor built on ProseMirror — and readers see a rendered surface that matches the Resolvd theme. Articles tie back to tickets through a suggestion ranker and a Promote-to-KB button on every resolved ticket.
+      </p>
+    </div>
+    <div class="pointer-events-none absolute inset-x-0 top-0 h-[500px] -z-10 opacity-[0.04]" style="background-image: linear-gradient(to right, var(--color-fg-strong) 1px, transparent 1px), linear-gradient(to bottom, var(--color-fg-strong) 1px, transparent 1px); background-size: 32px 32px;"></div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="grid md:grid-cols-2 gap-12 items-start">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Authoring</span>
+          <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Block editor. <span class="text-[var(--color-brand)]">No markdown gymnastics.</span></h2>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            BlockNote handles the heavy lifting — rich text, headings, lists, code, callouts. Slash-command to insert a block, drag a handle to reorder. Persists as JSON in <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">kb_articles.content_json</code> with a plain-text mirror for full-text search.
+          </p>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            Bundle adds ~380 KB gzipped — code-split <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">pages/Kb*</code> if CDN bandwidth matters.
+          </p>
+        </div>
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Block primitives</span>
+          <div class="mt-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)]">
+            {editorBlocks.map(b => (
+              <div class="px-5 py-3 flex flex-col md:flex-row md:items-start gap-1 md:gap-3">
+                <span class="font-mono text-xs text-[var(--color-brand)] md:mt-0.5 md:shrink-0 md:min-w-[10ch]">{b.name}</span>
+                <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed md:flex-1">{b.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="max-w-2xl">
+        <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Version history</span>
+        <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Every save. <span class="text-[var(--color-brand)]">Restorable.</span></h2>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          Every save snapshots into <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">kb_article_versions</code> with an optional change_summary. Restore any past version with one click — the restore itself writes a new version row marked <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">Restored from vN</code> so the audit chain never breaks.
+        </p>
+      </div>
+      <div class="mt-10 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)]">
+        {lifecycle.map(l => (
+          <div class="px-5 py-4 flex flex-col md:flex-row md:items-start gap-1.5 md:gap-4">
+            <span class="font-mono text-xs text-[var(--color-brand)] md:mt-0.5 md:shrink-0 md:min-w-[20ch]">{l.evt}</span>
+            <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed md:flex-1" set:html={l.action.replace(/`([^`]+)`/g, '<code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">$1</code>')}></p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="grid md:grid-cols-2 gap-12 items-start">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Tags + keywords</span>
+          <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Two surfaces. <span class="text-[var(--color-brand)]">One signal.</span></h2>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            Tags drive the project article index — chip filters that AND together via <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">tags @&gt; $1::text[]</code>. Keywords boost the trigram similarity ranker that matches articles to tickets. Use them for SKU codes, model numbers, error strings — searchable signal that would clutter a tag chip.
+          </p>
+        </div>
+        <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-1">
+          <div class="rounded-lg bg-[#050810] p-5 font-mono text-xs leading-relaxed">
+            <div class="text-[var(--color-fg-dim)]"># Article frontmatter</div>
+            <div class="mt-3 text-[#cbd5e1]">
+              <span class="text-violet-300">title:</span>    <span class="text-emerald-300">"Reseat the RAM on a HP Z240"</span><br />
+              <span class="text-violet-300">tags:</span>     <span class="text-emerald-300">[hardware, hp, workstation]</span><br />
+              <span class="text-violet-300">keywords:</span> <span class="text-emerald-300">[Z240, "DDR4", "blue screen", "0x7E"]</span><br />
+            </div>
+            <div class="mt-5 text-[var(--color-fg-muted)]">
+              <span class="text-[var(--color-brand)]">▸</span> Index filter: tag chips<br />
+              <span class="text-[var(--color-brand)]">▸</span> Ranker boost: keyword tokens<br />
+              <span class="text-[var(--color-brand)]">▸</span> Search hit: either path
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="max-w-2xl">
+        <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Ticket ↔ KB</span>
+        <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Articles meet <span class="text-[var(--color-brand)]">tickets where they live</span>.</h2>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          The Resolution tab on every ticket carries a Knowledge panel. Articles surface on open, link explicitly, or get drafted fresh from the ticket itself.
+        </p>
+      </div>
+      <div class="mt-10 grid md:grid-cols-3 gap-4">
+        {ticketSurfaces.map(s => (
+          <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+            <h3 class="font-semibold text-[var(--color-fg-strong)] mb-2">{s.title}</h3>
+            <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed" set:html={s.body.replace(/`([^`]+)`/g, '<code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">$1</code>')}></p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <FeatureFooter currentHref="/kb/" heading="Capture the next fix." subhead="Resolve a ticket → click Promote-to-KB → tweak → publish. The next time the same error walks in, the article auto-surfaces." />
+</Layout>

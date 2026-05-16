@@ -1,0 +1,169 @@
+---
+import Layout from "../layouts/Layout.astro";
+import FeatureFooter from "../components/FeatureFooter.astro";
+
+const ruleActions = [
+  { name: "promote_ticket", note: "Auto-create a ticket on the project. Severity + title regex narrow the rule." },
+  { name: "notify_only",    note: "Surface on the Alerts page and dashboard widget; no ticket spawned. Good for Warnings you want visibility on but don't want a queue entry for." },
+  { name: "ignore",         note: "Drop on the floor. Still recorded in `external_alert_event` for audit." },
+];
+
+const stateMachine = [
+  { state: "open",        note: "First fire — alert created or refire on an existing one increments `refire_count`." },
+  { state: "promoted",    note: "An `alert_rule` matched and Resolvd spawned a ticket. Cross-ref stored on the alert row." },
+  { state: "acknowledged", note: "Assignee or admin ACKs from the Alerts page. Quiets the dashboard widget without resolving upstream." },
+  { state: "cleared",     note: "Vendor reported a clear. State machine closes the row; refire restores it to open." },
+];
+
+const adapters = [
+  {
+    name: "Zabbix",
+    body: "Webhook intake for problem fire / clear. Optional REST backfill for historical context. Hostgroup → project routing per source.",
+    chip: "Webhook + REST",
+  },
+  {
+    name: "Action1",
+    body: "REST poll with OAuth2 client-credentials. 429 retry-after + token bucket. Failed policy runs auto-translate to alerts on the configured project.",
+    chip: "REST poll",
+    asterisk: true,
+  },
+  {
+    name: "Generic webhook",
+    body: "Tabular field-map editor — map inbound JSON paths to Resolvd ticket fields with optional `value_map` lookups. Onboard anything without a code change.",
+    chip: "Field-map",
+  },
+];
+---
+
+<Layout title="Alerts + Rules — Resolvd" description="Top-level deduped Alerts page with rule-driven ticket promotion, state machine across open / acknowledged / cleared, and a multi-vendor registry covering Zabbix, Action1, and generic webhook intake.">
+  <section class="relative overflow-hidden">
+    <div class="mx-auto max-w-4xl px-6 pt-20 pb-12 md:pt-28">
+      <span class="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1 text-xs text-[var(--color-fg-muted)]">
+        <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-brand)] shadow-[0_0_8px_var(--color-brand)]"></span>
+        Alerts
+      </span>
+      <h1 class="mt-2 text-4xl md:text-6xl font-bold tracking-tight leading-[1.05]">
+        Every problem. <span class="text-[var(--color-brand)]">Deduped.</span> Routed on rules.
+      </h1>
+      <p class="mt-6 text-lg text-[var(--color-fg-muted)] leading-relaxed max-w-2xl">
+        A top-level Alerts page is the state-machined view of every problem ingested from a monitoring source. Per-source rules decide which severities auto-promote to tickets — stop the noisy "every Warning is a ticket" loop without losing visibility.
+      </p>
+      <div class="mt-10 flex flex-wrap gap-2">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-rose-400/40 bg-rose-400/10 text-xs font-semibold text-rose-300 tracking-wider uppercase">
+          <span class="h-1.5 w-1.5 rounded-full bg-rose-300"></span> Open · P1
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-amber-400/40 bg-amber-400/10 text-xs font-semibold text-amber-300 tracking-wider uppercase">
+          <span class="h-1.5 w-1.5 rounded-full bg-amber-300"></span> Acknowledged
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-emerald-400/40 bg-emerald-400/10 text-xs font-semibold text-emerald-300 tracking-wider uppercase">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-300"></span> Cleared
+        </span>
+      </div>
+    </div>
+    <div class="pointer-events-none absolute inset-x-0 top-0 h-[500px] -z-10 opacity-[0.04]" style="background-image: linear-gradient(to right, var(--color-fg-strong) 1px, transparent 1px), linear-gradient(to bottom, var(--color-fg-strong) 1px, transparent 1px); background-size: 32px 32px;"></div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="grid md:grid-cols-2 gap-12 items-start">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Dedup model</span>
+          <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">One row per <span class="text-[var(--color-brand)]">(source, external_event_id)</span>.</h2>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            Distinct from <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">external_alert_event</code> (the immutable audit log per webhook fire): the alerts table keeps one row per problem and transitions <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">open → cleared</code> as the vendor opens + clears upstream. A <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">refire_count</code> tracks flap.
+          </p>
+        </div>
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">State transitions</span>
+          <div class="mt-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)]">
+            {stateMachine.map(s => (
+              <div class="px-5 py-3 flex flex-col md:flex-row md:items-start gap-1 md:gap-3">
+                <code class="font-mono text-xs text-[var(--color-brand)] md:mt-0.5 md:shrink-0 md:min-w-[13ch]">{s.state}</code>
+                <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed md:flex-1" set:html={s.note.replace(/`([^`]+)`/g, '<code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">$1</code>')}></p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="max-w-2xl">
+        <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Alert rules</span>
+        <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Three actions. <span class="text-[var(--color-brand)]">Severity + title regex narrows.</span></h2>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          Each rule combines a severity threshold, an optional title regex, and a single action. Warnings still appear on the Alerts page + dashboard widget — they just don't manufacture a ticket each time.
+        </p>
+      </div>
+      <div class="mt-10 grid md:grid-cols-3 gap-4">
+        {ruleActions.map(r => (
+          <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+            <code class="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono bg-[var(--color-surface-2)] text-[var(--color-brand)] mb-3">{r.name}</code>
+            <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed" set:html={r.note.replace(/`([^`]+)`/g, '<code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">$1</code>')}></p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="grid md:grid-cols-2 gap-12 items-start">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Dashboard widget</span>
+          <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Active alerts at a <span class="text-[var(--color-brand)]">glance</span>.</h2>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            Top 8 open problems with severity badge, source label, and ticket ref where promoted. Click through to the Alerts page or jump straight to the ticket. Submitter / Viewer roles see only alerts on their member projects.
+          </p>
+        </div>
+        <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-1">
+          <div class="rounded-lg bg-[#050810] p-5 font-mono text-xs leading-relaxed">
+            <div class="text-[var(--color-fg-dim)]"># Active alerts</div>
+            <div class="mt-3 space-y-2 text-[#cbd5e1]">
+              <div><span class="text-rose-300">P1</span> Disk &gt;95% · <span class="text-violet-300">zabbix</span> · <span class="text-emerald-300">WEB-0142</span></div>
+              <div><span class="text-rose-300">P1</span> Patch ERROR · <span class="text-violet-300">action1</span> · <span class="text-emerald-300">DC-0033</span></div>
+              <div><span class="text-amber-300">P2</span> Reboot req · <span class="text-violet-300">action1</span> · <span class="text-[var(--color-fg-dim)]">—</span></div>
+              <div><span class="text-amber-300">P2</span> CPU avg &gt;80 · <span class="text-violet-300">zabbix</span> · <span class="text-emerald-300">WEB-0144</span></div>
+              <div><span class="text-amber-300">P3</span> Cert &lt;30d · <span class="text-violet-300">webhook</span> · <span class="text-[var(--color-fg-dim)]">—</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="max-w-2xl">
+        <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Integration registry</span>
+        <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Three adapters. <span class="text-[var(--color-brand)]">Registry-driven.</span></h2>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">services/integrations/registry.js</code> is the source of truth for vendor adapters. The admin add-source form renders each adapter's <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">credentialsSchema</code> — so onboarding NinjaOne / Datto / ConnectWise lands the day the registry entry does, without UI churn.
+        </p>
+      </div>
+      <div class="mt-10 grid md:grid-cols-3 gap-4">
+        {adapters.map(a => (
+          <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+            <div class="flex items-baseline justify-between gap-3 mb-2">
+              <h3 class="font-semibold text-[var(--color-fg-strong)]">{a.name}{a.asterisk && <sup class="text-[var(--color-brand)]">*</sup>}</h3>
+              <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded bg-[var(--color-brand)]/15 text-[var(--color-brand)] border border-[var(--color-brand)]/30">{a.chip}</span>
+            </div>
+            <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed" set:html={a.body.replace(/`([^`]+)`/g, '<code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">$1</code>')}></p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <FeatureFooter currentHref="/alerts/" heading="Tame your alert firehose." subhead="Admin → Alert sources → New → pick an adapter → write your rules. The dashboard widget lights up on first fire." />
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-4xl px-6 py-12">
+      <p class="text-xs text-[var(--color-fg-dim)] leading-relaxed">
+        <sup class="text-[var(--color-brand)]">*</sup> The Action1 integration is an independent community project and is not affiliated with, endorsed by, sponsored by, or supported by Action1 Corporation. Action1 has not reviewed, tested, certified, or audited this integration for security, performance, or compliance purposes and is not responsible for its operation, availability, or use. &ldquo;Action1&rdquo; is a trademark of Action1 Corporation and is used solely to identify compatibility with the Action1 platform.
+      </p>
+    </div>
+  </section>
+</Layout>

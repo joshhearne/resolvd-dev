@@ -1,0 +1,250 @@
+---
+import Layout from "../layouts/Layout.astro";
+import FeatureFooter from "../components/FeatureFooter.astro";
+
+const assetTypes = [
+  "Workstation", "Server", "Laptop", "Printer",
+  "Monitor", "VoIP phone", "Network switch", "Wireless AP",
+  "Mobile", "UPS", "NVR/DVR", "Other",
+];
+
+const action1Endpoints = [
+  { path: "GET /api/3.0/organizations", body: "Tenant org IDs — one Action1 source can fan out across many orgs." },
+  { path: "GET /policies/instances/{org}/{policy}/endpoint_results", body: "Failed policy runs — each becomes a ticket on the matching alert rule." },
+  { path: "GET /api/3.0/endpoints/managed/{org}/{ep}", body: "Hardware specs + last-logged-in user + security posture (patches, vulns, reboot required)." },
+  { path: "GET /api/3.0/apps/{org}/data/{ep}", body: "Installed software inventory. Polled on demand + every 7 days via the scheduler, 2 stale computer-type assets per tick." },
+];
+
+const securityPostureColumns = [
+  { name: "missing_updates", note: "Critical / other counts. Red badge on non-zero criticals." },
+  { name: "vulnerabilities", note: "Critical / other counts. Same badge treatment." },
+  { name: "update_status",   note: "SUCCESS / WARNING / ERROR. Color-coded inline." },
+  { name: "reboot_required", note: "Bool flag. Inventory list filter chip when on." },
+];
+
+const customFieldTypes = ["text", "number", "date", "bool", "select"];
+
+const companyMapping = [
+  { strategy: "Exact name match",      note: "Default — Action1 org names that line up with Resolvd companies resolve automatically." },
+  { strategy: "Per-source company map", note: "Multi-tenant integrations where org names don't match (`Stratus Systems — HQ`, `Stratus Systems — DC2`). Admin routes each exotic name explicitly." },
+  { strategy: "Inventory company override", note: "Single-tenant sources (one Zabbix per customer) — pin the entire source to one company in one click." },
+];
+---
+
+<Layout title="Inventory + Action1 — Resolvd" description="Top-level inventory module with hardware, installed software, and security posture pulled from Action1. Twelve seeded asset types, admin-defined customs, per-source custom-field mapping, MSP-grade company isolation.">
+  <section class="relative overflow-hidden">
+    <div class="mx-auto max-w-4xl px-6 pt-20 pb-12 md:pt-28">
+      <span class="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1 text-xs text-[var(--color-fg-muted)]">
+        <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-brand)] shadow-[0_0_8px_var(--color-brand)]"></span>
+        Inventory module
+      </span>
+      <h1 class="mt-2 text-4xl md:text-6xl font-bold tracking-tight leading-[1.05]">
+        Every machine. <span class="text-[var(--color-brand)]">In the ticket.</span>
+      </h1>
+      <p class="mt-6 text-lg text-[var(--color-fg-muted)] leading-relaxed max-w-2xl">
+        Top-level Inventory page lists every managed machine across integrations. Hardware specs, security posture, linked user, linked company, installed software, ticket history. Module shipped against Action1<sup class="text-[var(--color-brand)]">*</sup> as the reference adapter — schema + sync pipeline are RMM-agnostic, so additional RMMs (Zabbix inventory, NinjaOne, Datto, ConnectWise) drop in through the same integration registry.
+      </p>
+      <div class="mt-10 flex flex-wrap gap-2">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-emerald-400/40 bg-emerald-400/10 text-xs font-semibold text-emerald-300 tracking-wider uppercase">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-300"></span> Up to date
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-amber-400/40 bg-amber-400/10 text-xs font-semibold text-amber-300 tracking-wider uppercase">
+          <span class="h-1.5 w-1.5 rounded-full bg-amber-300"></span> Reboot required
+        </span>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-rose-400/40 bg-rose-400/10 text-xs font-semibold text-rose-300 tracking-wider uppercase">
+          <span class="h-1.5 w-1.5 rounded-full bg-rose-300"></span> 3 critical patches
+        </span>
+      </div>
+    </div>
+    <div class="pointer-events-none absolute inset-x-0 top-0 h-[500px] -z-10 opacity-[0.04]" style="background-image: linear-gradient(to right, var(--color-fg-strong) 1px, transparent 1px), linear-gradient(to bottom, var(--color-fg-strong) 1px, transparent 1px); background-size: 32px 32px;"></div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="grid md:grid-cols-2 gap-12 items-start">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Asset types</span>
+          <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Twelve seeded. <span class="text-[var(--color-brand)]">Customs for the rest.</span></h2>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            Each type controls which built-in fields apply — monitors don't need a hostname, printers do, VoIP phones get extension + PC-pass-through MAC. Admin can define custom asset types for the long tail (door readers, NVRs, signage displays) without code changes.
+          </p>
+        </div>
+        <div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {assetTypes.map(t => (
+              <span class="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-2 text-xs text-[var(--color-fg-strong)] text-center">{t}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="max-w-2xl">
+        <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Action1 connector<sup class="text-[var(--color-brand)]">*</sup> — reference adapter</span>
+        <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">One source. <span class="text-[var(--color-brand)]">Alerts + inventory + software.</span></h2>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          Resolvd polls Action1's v3 REST API with an OAuth2 client-credentials key. Token-bucket rate limiting + 429 retry-after handling. Toggle <strong class="text-[var(--color-fg-strong)]">Feed inventory module</strong> on the alert source to enable the inventory paths.
+        </p>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          Action1 was the shipping target because the v3 REST API is well-documented and exposes every signal Resolvd cares about in one place. The poll pipeline below documents the Action1 path specifically — any RMM that exposes endpoints + policy results + installed software can plug into the same write paths via a registry adapter.
+        </p>
+      </div>
+      <div class="mt-10 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)]">
+        {action1Endpoints.map(e => (
+          <div class="px-5 py-4 flex flex-col md:flex-row md:items-start gap-1.5 md:gap-4">
+            <code class="font-mono text-xs text-[var(--color-brand)] md:mt-0.5 md:shrink-0 md:min-w-[44ch]">{e.path}</code>
+            <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed md:flex-1">{e.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="grid md:grid-cols-2 gap-12 items-start">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Security posture</span>
+          <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">First-class. <span class="text-[var(--color-brand)]">Not buried in raw_data.</span></h2>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            Action1 reports patch + vulnerability counters in every endpoint payload. Previously they sat unused; now they're first-class columns. The inventory list gets <strong class="text-[var(--color-fg-strong)]">Patches</strong> + <strong class="text-[var(--color-fg-strong)]">Vulns</strong> columns with red badges for non-zero criticals. Existing assets get backfilled on upgrade — no re-poll needed.
+          </p>
+        </div>
+        <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)]">
+          {securityPostureColumns.map(c => (
+            <div class="px-5 py-3 flex flex-col md:flex-row md:items-start gap-1 md:gap-3">
+              <code class="font-mono text-xs text-[var(--color-brand)] md:mt-0.5 md:shrink-0 md:min-w-[18ch]">{c.name}</code>
+              <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed md:flex-1">{c.note}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="grid md:grid-cols-2 gap-12 items-start">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Installed software</span>
+          <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Per-asset. <span class="text-[var(--color-brand)]">Searchable.</span> Auto-pruned.</h2>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            Per-asset software inventory pulled from Action1 on demand (<strong class="text-[var(--color-fg-strong)]">Sync now</strong> button) and automatically every 7 days. The scheduler picks 2 stale computer-type assets per tick to keep API load light. Re-syncs drop uninstalled packages automatically — the list reflects the device state, not stale history.
+          </p>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            Search by name or vendor across the installed list. A workspace-level <strong class="text-[var(--color-fg-strong)]">software aliases</strong> table maps vendor-specific names (<code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">Microsoft 365 Apps for Enterprise</code> / <code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">M365 Apps</code> / <code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">Office 365</code>) to a canonical product so reports don't fragment per vendor.
+          </p>
+        </div>
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Custom fields</span>
+          <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Stable slugs. <span class="text-[var(--color-brand)]">Rename-proof.</span></h2>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            Custom fields per entity with stable slugs that survive label renames. Asset Tag is the canonical example — define once, fill on every asset. Five field types:
+          </p>
+          <div class="mt-4 flex flex-wrap gap-2">
+            {customFieldTypes.map(t => (
+              <code class="rounded-md border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1 text-xs font-mono text-[var(--color-brand)]">{t}</code>
+            ))}
+          </div>
+          <p class="mt-5 text-[var(--color-fg-muted)] leading-relaxed">
+            Action1's <strong class="text-[var(--color-fg-strong)]">30 per-endpoint custom attributes</strong> can route to either an asset column or a custom field via a per-source mapping table. Each attribute slot's most-recent sample value renders inline so admins map against real data, not guesses.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="max-w-2xl">
+        <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Ticket ↔ asset linking</span>
+        <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Linked both ways. <span class="text-[var(--color-brand)]">MSP-safe.</span></h2>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          Asset detail pages show ticket history; ticket sidebars show the linked asset's hostname (clickable). Per-project toggle gates this — off by default, on requires explicit opt-in plus an optional <strong class="text-[var(--color-fg-strong)]">company filter</strong> that restricts the picker to specific Resolvd companies. MSP isolation: customer A's project never sees customer B's assets.
+        </p>
+      </div>
+      <div class="mt-8 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+        <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">UPN auto-association</span>
+        <p class="mt-2 text-sm text-[var(--color-fg-muted)] leading-relaxed">
+          Action1 reports each endpoint's last-logged-in user as a plain string (<code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">jdoe</code>, <code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">stratus-admin</code>). On every sync, Resolvd's UPN matcher generates plausible aliases from each user's display name + email local part — for "John Doe": <code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">johndoe</code>, <code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">jdoe</code>, <code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">johnd</code>, <code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">john</code>, <code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">doe</code>, <code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">doej</code> — and matches against what the RMM reports. Ambiguous matches refuse to guess; admin can manually link via the asset detail UI.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="max-w-2xl">
+        <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Company resolution</span>
+        <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Three strategies for <span class="text-[var(--color-brand)]">tenant routing</span>.</h2>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          Org names in the RMM rarely line up with Resolvd companies one-to-one. Three knobs cover the common MSP shapes:
+        </p>
+      </div>
+      <div class="mt-10 grid md:grid-cols-3 gap-4">
+        {companyMapping.map(m => (
+          <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+            <h3 class="font-semibold text-[var(--color-fg-strong)] mb-2">{m.strategy}</h3>
+            <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed" set:html={m.note.replace(/`([^`]+)`/g, '<code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">$1</code>')}></p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="grid md:grid-cols-2 gap-12 items-start">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Other RMMs</span>
+          <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Action1 first. <span class="text-[var(--color-brand)]">Not Action1 only.</span></h2>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            Asset schema, custom-field router, UPN matcher, company resolution, security-posture columns, and software sync all sit behind RMM-agnostic write paths. Action1 happens to be the first adapter to wire them up end-to-end — the inventory module itself doesn't assume anything Action1-specific.
+          </p>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">services/integrations/registry.js</code> is the entry point for new adapters. Implement <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">pollEndpoints()</code> + <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">pollSoftware()</code> against the vendor's API and the add-source UI renders the credentials form from your <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">credentialsSchema</code>.
+          </p>
+        </div>
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Roadmap</span>
+          <div class="mt-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)]">
+            <div class="px-5 py-3 flex items-start gap-3">
+              <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded bg-[var(--color-brand)]/15 text-[var(--color-brand)] border border-[var(--color-brand)]/30 shrink-0">Next</span>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium text-[var(--color-fg-strong)]">Zabbix inventory pull</div>
+                <p class="mt-0.5 text-xs text-[var(--color-fg-muted)] leading-relaxed">Same pattern as Action1, scoped to single-customer sources for MSP isolation.</p>
+              </div>
+            </div>
+            <div class="px-5 py-3 flex items-start gap-3">
+              <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded bg-[var(--color-brand)]/15 text-[var(--color-brand)] border border-[var(--color-brand)]/30 shrink-0">Next</span>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium text-[var(--color-fg-strong)]">Phase 2 multi-source dedup</div>
+                <p class="mt-0.5 text-xs text-[var(--color-fg-muted)] leading-relaxed">Drag-drop priority list + <code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">fill_gaps</code> / <code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">dedupe_only</code> strategies when two RMMs report the same machine. Parked until adapter #2 lands.</p>
+              </div>
+            </div>
+            <div class="px-5 py-3 flex items-start gap-3">
+              <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded bg-[var(--color-fg-dim)]/10 text-[var(--color-fg-dim)] border border-[var(--color-border)] shrink-0">Open</span>
+              <div class="flex-1 min-w-0">
+                <div class="text-sm font-medium text-[var(--color-fg-strong)]">NinjaOne · Datto · ConnectWise</div>
+                <p class="mt-0.5 text-xs text-[var(--color-fg-muted)] leading-relaxed">No registry entry yet. Open an issue if you'd contribute one.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <FeatureFooter currentHref="/inventory/" heading="Hook up your RMM." subhead="Admin → Alert sources → New. Pick Action1 (or any other registered adapter), paste credentials, toggle Feed inventory. Endpoints populate on the first poll." />
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-4xl px-6 py-12">
+      <p class="text-xs text-[var(--color-fg-dim)] leading-relaxed">
+        <sup class="text-[var(--color-brand)]">*</sup> This integration is an independent community project and is not affiliated with, endorsed by, sponsored by, or supported by Action1 Corporation. Action1 has not reviewed, tested, certified, or audited this integration for security, performance, or compliance purposes and is not responsible for its operation, availability, or use. &ldquo;Action1&rdquo; is a trademark of Action1 Corporation and is used solely to identify compatibility with the Action1 platform.
+      </p>
+    </div>
+  </section>
+</Layout>
