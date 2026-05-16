@@ -1,0 +1,76 @@
+{
+  "_comment": "Blog screenshot plan for v0.7.0 — inventory module + SLA escalations + Tech role. Shot against demo :8091 as the seeded admin.",
+  "baseURL": "http://localhost:8091",
+  "viewport": { "width": 1440, "height": 900 },
+  "deviceScaleFactor": 2,
+  "auth": {
+    "url": "/login",
+    "steps": [
+      { "fill":       "input[type=email]",    "value": "${DEMO_EMAIL}" },
+      { "fill":       "input[type=password]", "value": "${DEMO_PASSWORD}" },
+      { "wait": 1100 },
+      { "press":      "Enter" },
+      { "waitForURL": "**/dashboard" },
+      { "waitFor":    "h1" }
+    ]
+  },
+  "shots": [
+    {
+      "name": "inventory-list",
+      "url": "/inventory",
+      "actions": [
+        { "waitFor": "h1:has-text('Inventory')" },
+        { "wait": 700 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "asset-detail-security",
+      "url": "/inventory",
+      "viewport": { "width": 1440, "height": 1100 },
+      "actions": [
+        { "waitFor": "h1:has-text('Inventory')" },
+        { "wait": 700 },
+        { "eval": "[...document.querySelectorAll('td')].find(td => td.textContent.trim().startsWith('jdoe-t14'))?.closest('tr')?.click()" },
+        { "wait": 1000 },
+        { "eval": "[...document.querySelectorAll('div')].find(d => d.textContent.trim() === 'Security posture')?.scrollIntoView({block:'center'})" },
+        { "wait": 400 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "sla-escalation-config",
+      "url": "/admin/escalations",
+      "viewport": { "width": 1440, "height": 1100 },
+      "actions": [
+        { "waitFor": "h2:has-text('Escalation')" },
+        { "wait": 500 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "sla-vendor-vs-internal",
+      "url": "/dashboard",
+      "viewport": { "width": 1440, "height": 1100 },
+      "actions": [
+        { "waitFor": "h2:has-text('SLA')" },
+        { "wait": 500 },
+        { "eval": "[...document.querySelectorAll('h2')].find(h => h.textContent.includes('SLA'))?.scrollIntoView({block:'start'})" },
+        { "wait": 400 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "ticket-asset-link",
+      "url": "/tickets/15",
+      "viewport": { "width": 1440, "height": 1100 },
+      "actions": [
+        { "waitFor": "h1" },
+        { "wait": 900 },
+        { "eval": "[...document.querySelectorAll('h2')].find(h => h.textContent.includes('Linked asset'))?.scrollIntoView({block:'center'})" },
+        { "wait": 400 }
+      ],
+      "fullPage": false
+    }
+  ]
+}
