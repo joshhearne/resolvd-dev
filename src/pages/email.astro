@@ -37,6 +37,14 @@ const banners = [
   { name: "Avanan", note: "Suspicious / external banners" },
 ];
 
+const roadmap = [
+  {
+    tag: "Next",
+    title: "Forward from agent inbox → ticket",
+    body: "Agents forward a user's email into the connected inbox and Resolvd treats the **original sender** as the requestor/submitter, not the forwarding agent. The forwarder becomes the **assigned agent** automatically. If the original message lacked a `#PREFIX`, the agent adds one on forward to route the project. Standard `From:`/`Reply-To:` header parsing on the wrapped message, with the forwarder identified via the connected mailbox owner.",
+  },
+];
+
 const providers = [
   {
     name: "Microsoft 365",
@@ -224,6 +232,30 @@ const providers = [
           </div>
         ))}
       </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="max-w-2xl">
+        <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Roadmap</span>
+        <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">What's <span class="text-[var(--color-brand)]">next</span>.</h2>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          Auto-create, helpdesk routing, banner stripping, vendor outbound, and OAuth Microsoft / Gmail adapters all ship today. Queue below.
+        </p>
+      </div>
+      <div class="mt-10 grid md:grid-cols-2 gap-4">
+        {roadmap.map(r => (
+          <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+            <div class="flex items-baseline justify-between gap-3 mb-2">
+              <h3 class="font-semibold text-[var(--color-fg-strong)]">{r.title}</h3>
+              <span class="px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded bg-[var(--color-brand)]/15 text-[var(--color-brand)] border border-[var(--color-brand)]/30">{r.tag}</span>
+            </div>
+            <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed" set:html={r.body.replace(/`([^`]+)`/g, '<code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong class="text-[var(--color-fg-strong)]">$1</strong>')}></p>
+          </div>
+        ))}
+      </div>
+      <p class="mt-6 text-xs text-[var(--color-fg-dim)]">Tracked in <a href="https://github.com/joshhearne/resolvd/blob/main/ROADMAP.md" target="_blank" rel="noopener" class="text-[var(--color-brand)] hover:underline">ROADMAP.md</a>. Open an issue if you want a specific beat prioritized.</p>
     </div>
   </section>
 
