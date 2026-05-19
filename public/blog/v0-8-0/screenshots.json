@@ -51,6 +51,17 @@
       "fullPage": false
     },
     {
+      "name": "build-info-card",
+      "url": "/admin/system-health",
+      "actions": [
+        { "waitFor": "h1:has-text('System health')" },
+        { "wait": 600 },
+        { "click": "button:has-text('Check for updates')" },
+        { "wait": 1800 }
+      ],
+      "fullPage": false
+    },
+    {
       "name": "default-landing-project",
       "url": "/admin/email-backends",
       "viewport": { "width": 1440, "height": 1100 },
