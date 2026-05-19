@@ -1,0 +1,70 @@
+{
+  "_comment": "Blog screenshot plan for v0.8.0 — comment + note editing, image lightbox, agent-forward, multi-scope default landing project. Shot against demo :8091 as the seeded admin.",
+  "baseURL": "http://localhost:8091",
+  "viewport": { "width": 1440, "height": 900 },
+  "deviceScaleFactor": 2,
+  "auth": {
+    "url": "/login",
+    "steps": [
+      { "fill":       "input[type=email]",    "value": "${DEMO_EMAIL}" },
+      { "fill":       "input[type=password]", "value": "${DEMO_PASSWORD}" },
+      { "wait": 1100 },
+      { "press":      "Enter" },
+      { "waitForURL": "**/dashboard" },
+      { "waitFor":    "h1" }
+    ]
+  },
+  "shots": [
+    {
+      "name": "edit-comment-composer",
+      "url": "/tickets/1",
+      "actions": [
+        { "waitFor": "h1, h2" },
+        { "wait": 700 },
+        { "click": "#comment-4 button:has-text('Edit')" },
+        { "waitFor": "#comment-4 button:has-text('Save')" },
+        { "wait": 300 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "image-lightbox",
+      "url": "/tickets/1",
+      "actions": [
+        { "waitFor": "h1, h2" },
+        { "wait": 700 },
+        { "click": "img[alt='network-diagram.png']" },
+        { "waitFor": "div[role='dialog'][aria-modal='true']" },
+        { "wait": 400 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "project-members",
+      "url": "/projects/1",
+      "actions": [
+        { "waitFor": "h1" },
+        { "wait": 700 },
+        { "eval": "[...document.querySelectorAll('h2, h3, th, div')].find(n => /Members|Member|Project members/i.test(n.textContent.trim()))?.scrollIntoView({block:'center'})" },
+        { "wait": 400 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "default-landing-project",
+      "url": "/admin/email-backends",
+      "viewport": { "width": 1440, "height": 1100 },
+      "actions": [
+        { "waitFor": "h1" },
+        { "wait": 700 },
+        { "eval": "[...document.querySelectorAll('h3, div, span')].find(n => /Resolvd Helpdesk/i.test(n.textContent.trim()) && n.closest('button, [role=button], a, .cursor-pointer'))?.closest('button, [role=button], a, .cursor-pointer')?.click() || [...document.querySelectorAll('h3')].find(n => /Resolvd Helpdesk/i.test(n.textContent.trim()))?.click()" },
+        { "wait": 800 },
+        { "eval": "[...document.querySelectorAll('button')].find(b => /Project scope/i.test(b.textContent.trim()))?.click()" },
+        { "wait": 800 },
+        { "eval": "[...document.querySelectorAll('label, div')].find(n => /Default landing project/i.test(n.textContent.trim()))?.scrollIntoView({block:'center'})" },
+        { "wait": 300 }
+      ],
+      "fullPage": false
+    }
+  ]
+}
