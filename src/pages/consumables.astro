@@ -1,0 +1,134 @@
+---
+import Layout from "../layouts/Layout.astro";
+import FeatureFooter from "../components/FeatureFooter.astro";
+
+const schema = [
+  { col: "part_no",              note: "Unique vendor SKU — `HP-58A-CF258A`, `APC-RBC110`. Becomes the lead line on the printed label." },
+  { col: "vendor_company_id",    note: "FK to the Resolvd company row that supplies the part. Surfaces the vendor name in the list + on labels." },
+  { col: "current_stock",        note: "Computed running total. Never mutated directly — every change goes through the ledger." },
+  { col: "low_stock_threshold",  note: "Trip-point for the red `LOW` chip on the list. Informational; no notification fires yet." },
+  { col: "notes",                note: "Free-text — \"For HP LJ Pro M404n at Reception\", \"Datacenter A, UPS row 3\"." },
+  { col: "archive",              note: "Soft-delete flag. Archived rows hidden from the default list, kept in storage so the ledger never orphans." },
+];
+
+const ledgerShape = [
+  { col: "delta",      note: "Signed int. `+5` on receive, `-1` on issuance, `-2` on disposal. Sum across all rows equals `current_stock`." },
+  { col: "reason",     note: "Free-text but the seeded list is `received | issued | returned | disposed | count_correction | loss`." },
+  { col: "ticket_id",  note: "Optional — link an issuance back to the ticket that consumed it. `-1 Toner for ACME-0042`." },
+  { col: "by_user_id", note: "Actor. Every adjustment carries who ran it." },
+  { col: "at",         note: "Timestamp, server clock. Ledger is append-only — corrections happen via a new `count_correction` row, not by editing history." },
+  { col: "note",       note: "Free-text — `Newegg PO #4521`, `recall — supplier swap`, `inventory recount mismatch`." },
+];
+
+const workflows = [
+  { name: "Receive shipment",  body: "Detail → `+ N` with reason `received`. Note the PO." },
+  { name: "Issue to ticket",   body: "Detail → `- 1` with reason `issued`, link the ticket id. Trail flows back to the consuming ticket." },
+  { name: "Returnable loan",   body: "`- 1` reason `issued` on issue, `+ 1` reason `returned` on the way back. Sum nets zero on net-zero loans." },
+  { name: "Disposal / recall", body: "`- N` reason `disposed`. Keeps the deduction on the audit trail; the absence of a `received` counterpart explains the spend." },
+  { name: "Count correction",  body: "When a manual recount disagrees with on-screen — log the delta as `count_correction`. Discrepancy stays visible rather than hiding behind an edit." },
+];
+---
+
+<Layout
+  title="Consumables — Resolvd"
+  description="Supply inventory with an append-only ledger. Stock changes always carry actor + reason + timestamp. Linked to tickets when issued, printable to a Zebra label, scoped by vendor company."
+>
+  <section class="relative overflow-hidden">
+    <div class="mx-auto max-w-4xl px-6 pt-20 pb-12 md:pt-28">
+      <span class="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1 text-xs text-[var(--color-fg-muted)]">
+        <span class="h-1.5 w-1.5 rounded-full bg-[var(--color-brand)] shadow-[0_0_8px_var(--color-brand)]"></span>
+        Consumables
+      </span>
+      <h1 class="mt-2 text-4xl md:text-6xl font-bold tracking-tight leading-[1.05]">
+        Stuff that <span class="text-[var(--color-brand)]">runs out</span>.
+      </h1>
+      <p class="mt-6 text-lg text-[var(--color-fg-muted)] leading-relaxed max-w-2xl">
+        Toner. Spare drum kits. UPS batteries. Replacement keyboards. The stuff Inventory shouldn't track per-serial because it's interchangeable. Distinct table, distinct nav entry — but the same audit-trail muscle Resolvd uses everywhere. Every quantity change carries actor, reason, timestamp, and optional ticket link.
+      </p>
+      <div class="mt-10 flex flex-wrap gap-2">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-emerald-400/40 bg-emerald-400/10 text-xs font-semibold text-emerald-300 tracking-wider uppercase">+5 received</span>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-amber-400/40 bg-amber-400/10 text-xs font-semibold text-amber-300 tracking-wider uppercase">-1 issued</span>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-rose-400/40 bg-rose-400/10 text-xs font-semibold text-rose-300 tracking-wider uppercase">LOW</span>
+      </div>
+    </div>
+    <div class="pointer-events-none absolute inset-x-0 top-0 h-[500px] -z-10 opacity-[0.04]" style="background-image: linear-gradient(to right, var(--color-fg-strong) 1px, transparent 1px), linear-gradient(to bottom, var(--color-fg-strong) 1px, transparent 1px); background-size: 32px 32px;"></div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="grid md:grid-cols-2 gap-12 items-start">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Shape of a consumable</span>
+          <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Per-SKU, <span class="text-[var(--color-brand)]">per vendor</span>.</h2>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            A consumable row is one part-number you keep on hand. Linked to the vendor company that supplies it so reorder context is one click away. Stock never gets edited directly — direct <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">PATCH /current_stock</code> is rejected with <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">400 "use /:id/move"</code>. The audit trail can't be bypassed.
+          </p>
+        </div>
+        <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)]">
+          {schema.map(s => (
+            <div class="px-5 py-3 flex flex-col md:flex-row md:items-start gap-1 md:gap-3">
+              <span class="font-mono text-xs text-[var(--color-brand)] md:mt-0.5 md:shrink-0 md:min-w-[18ch]">{s.col}</span>
+              <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed md:flex-1" set:html={s.note.replace(/`([^`]+)`/g, '<code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">$1</code>')}></p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="max-w-2xl">
+        <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Append-only ledger</span>
+        <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Every delta. <span class="text-[var(--color-brand)]">Who ran it. When.</span></h2>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          Every stock change runs <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">UPDATE consumables SET current_stock = current_stock + $delta</code> + <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">INSERT consumable_movements …</code> in the same transaction. Inserts never get edited or deleted. A bad count? Log a <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">count_correction</code> row with the delta — the discrepancy stays on the timeline.
+        </p>
+      </div>
+      <div class="mt-10 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)]">
+        {ledgerShape.map(l => (
+          <div class="px-5 py-3 flex flex-col md:flex-row md:items-start gap-1 md:gap-3">
+            <span class="font-mono text-xs text-[var(--color-brand)] md:mt-0.5 md:shrink-0 md:min-w-[14ch]">{l.col}</span>
+            <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed md:flex-1" set:html={l.note.replace(/`([^`]+)`/g, '<code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">$1</code>')}></p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="grid md:grid-cols-2 gap-12 items-start">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Common workflows</span>
+          <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Five buttons. <span class="text-[var(--color-brand)]">All audited.</span></h2>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            Stock adjustment is one endpoint — <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">POST /api/consumables/:id/move</code> — with a delta, a reason, and optional context. The UI surfaces five common shapes; the API accepts arbitrary reasons so you can grow the vocabulary without a schema migration.
+          </p>
+        </div>
+        <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)]">
+          {workflows.map(w => (
+            <div class="px-5 py-3 flex flex-col md:flex-row md:items-start gap-1 md:gap-3">
+              <span class="font-mono text-xs text-[var(--color-brand)] md:mt-0.5 md:shrink-0 md:min-w-[14ch]">{w.name}</span>
+              <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed md:flex-1" set:html={w.body.replace(/`([^`]+)`/g, '<code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">$1</code>')}></p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="max-w-2xl">
+        <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Printable labels</span>
+        <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">A label, a QR, <span class="text-[var(--color-brand)]">a scan back to the row</span>.</h2>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          Consumable detail carries a <strong>Print label</strong> button alongside its asset cousin. Same Zebra-backed pipeline, same raw TCP <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">:9100</code> path. Lead line is the <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">part_no</code>, vendor on the property line, QR encodes <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">FRONTEND_URL/consumables/&lt;id&gt;</code>. Stick it on the shelf; scan it from a phone; you're at the right Resolvd row to log an issuance.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <FeatureFooter currentHref="/consumables/" heading="Stop the spreadsheet." subhead="Define the SKUs that matter, set a reorder threshold, log a movement every time you touch the shelf. Stock numbers stop drifting because every change has an audit row." />
+</Layout>

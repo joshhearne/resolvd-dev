@@ -5,13 +5,14 @@ export type FeatureNavEntry = {
 };
 
 export const featureNav: FeatureNavEntry[] = [
-  { href: "/inventory/", label: "Inventory + Action1", note: "Assets, software, security posture" },
-  { href: "/kb/",        label: "Knowledge Base",      note: "Articles, version history, ticket linking" },
-  { href: "/alerts/",    label: "Alerts + Rules",      note: "Dedup, rule-driven ticket promotion" },
-  { href: "/sla/",       label: "SLA Tracker",         note: "Clocks, escalations, business hours" },
-  { href: "/ai/",        label: "AI Assist",           note: "BYO-AI text rewrite" },
-  { href: "/email/",     label: "Email-to-Ticket",     note: "Inbound pipeline + queue" },
-  { href: "/vendors/",   label: "Vendor CRM",          note: "Companies, contacts, color-coded threads" },
+  { href: "/inventory/",   label: "Inventory + Action1", note: "Assets, software, security posture, labels, custody" },
+  { href: "/consumables/", label: "Consumables",         note: "Supply ledger — toner, drums, batteries" },
+  { href: "/kb/",          label: "Knowledge Base",      note: "Articles, runbooks, agent-only, version history" },
+  { href: "/alerts/",      label: "Alerts + Rules",      note: "Dedup, rule-driven ticket promotion" },
+  { href: "/sla/",         label: "SLA Tracker",         note: "Clocks, escalations, business hours" },
+  { href: "/ai/",          label: "AI Assist",           note: "BYO-AI text rewrite" },
+  { href: "/email/",       label: "Email-to-Ticket",     note: "Inbound pipeline + queue" },
+  { href: "/vendors/",     label: "Vendor CRM",          note: "Companies, contacts, color-coded threads" },
 ];
 
 export const featurePrefixes = featureNav.map(f => f.href);

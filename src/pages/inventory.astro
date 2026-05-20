@@ -24,6 +24,22 @@ const securityPostureColumns = [
 
 const customFieldTypes = ["text", "number", "date", "bool", "select"];
 
+const labelLayout = [
+  { row: "Lead line",    note: "`asset_tag` — faux-bolded via a 1-dot horizontal double-strike. The default Zebra scalable font ships without a bold weight." },
+  { row: "Second line",  note: "Hostname, but only when it's distinct from the tag. Avoids a redundant row." },
+  { row: "Blank visual", note: "Spacer so the property-line breathes." },
+  { row: "Property line", note: "Configurable footer string (e.g. `HearneTech IT — call x4040`). Optional." },
+  { row: "QR code",       note: "Right-justified inside the die-cut radius. Encodes `FRONTEND_URL/inventory/<id>` — iPhone scan opens the right Resolvd row." },
+];
+
+const custodyShape = [
+  { col: "out_at / out_by",  note: "Timestamp + the actor who issued the checkout (separate from the holder)." },
+  { col: "user_id",          note: "Holder of the asset during this checkout window. Auto-mirrored onto `assets.linked_user_id`." },
+  { col: "out_note",         note: "Free-text — \"loaner for VPN troubleshooting\", \"shipped via FedEx 1Z…\", \"kept at desk\"." },
+  { col: "in_at / in_by",    note: "Filled on check-in. NULL while the holder still has the device." },
+  { col: "in_note",          note: "Free-text on return — \"keyboard sticky, sent to repair\", \"all good\"." },
+];
+
 const companyMapping = [
   { strategy: "Exact name match",      note: "Default — Action1 org names that line up with Resolvd companies resolve automatically." },
   { strategy: "Per-source company map", note: "Multi-tenant integrations where org names don't match (`Stratus Systems — HQ`, `Stratus Systems — DC2`). Admin routes each exotic name explicitly." },
@@ -234,6 +250,57 @@ const companyMapping = [
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="grid md:grid-cols-2 gap-12 items-start">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Asset tags + Zebra label printing</span>
+          <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">A tag that <span class="text-[var(--color-brand)]">survives the RMM</span>.</h2>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">assets.asset_tag</code> is an operator-facing inventory ID distinct from the OS-reported hostname. RMM-managed rows keep every structural column synced from the source on every poll — but the tag is admin-owned. Sync uses <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">COALESCE</code> so your tag persists even when the source has the slot empty.
+          </p>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            Tag becomes the lead line on a printed label. Asset detail + Consumable detail both expose a <strong>Print label</strong> button — handler role on the asset / consumable, single-row config under Admin → Site → Label printer.
+          </p>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            Wire goes straight at the printer: raw TCP open on <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">:9100</code> with an 800 ms post-write hold so the printer can ack before tear-down. No print spooler, no CUPS, no driver. Works against any Zebra-compatible ZPL printer on the LAN.
+          </p>
+        </div>
+        <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)]">
+          {labelLayout.map(l => (
+            <div class="px-5 py-3 flex flex-col md:flex-row md:items-start gap-1 md:gap-3">
+              <span class="font-mono text-xs text-[var(--color-brand)] md:mt-0.5 md:shrink-0 md:min-w-[14ch]">{l.row}</span>
+              <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed md:flex-1" set:html={l.note.replace(/`([^`]+)`/g, '<code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">$1</code>')}></p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="max-w-2xl">
+        <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Custody log</span>
+        <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Who has it. <span class="text-[var(--color-brand)]">Since when.</span></h2>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          Every asset carries a check-out / check-in trail. One row per custody window — the holder, the actor who issued or received the device, and free-text notes on each side of the loan. The current holder is the row where <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">in_at IS NULL</code>.
+        </p>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          A partial unique index on <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">asset_id WHERE in_at IS NULL</code> enforces one active checkout per asset. Double check-out 409s at the route. <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">assets.linked_user_id</code> auto-mirrors the active holder, so the legacy "who has this?" UI reflects current possession without separate bookkeeping.
+        </p>
+      </div>
+      <div class="mt-10 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)]">
+        {custodyShape.map(c => (
+          <div class="px-5 py-3 flex flex-col md:flex-row md:items-start gap-1 md:gap-3">
+            <span class="font-mono text-xs text-[var(--color-brand)] md:mt-0.5 md:shrink-0 md:min-w-[18ch]">{c.col}</span>
+            <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed md:flex-1" set:html={c.note.replace(/`([^`]+)`/g, '<code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">$1</code>')}></p>
+          </div>
+        ))}
       </div>
     </div>
   </section>
