@@ -44,9 +44,6 @@ Each checkbox tick records who ticked it + the timestamp. **Reset** clears all s
 - `kb_articles.kind` enum-ish text (`article` | `runbook`).
 - `ticket_runbook_runs` (`ticket_id`, `article_id`, `step_states JSONB`, `started_by`, `started_at`, `completed_at`). Unique on `(ticket_id, article_id)` so opening the same runbook on a ticket twice merges. `step_states` is `{ blockId: { checked, checked_by, checked_by_name, checked_at } }`.
 
-## Roadmap (post-v0.9.0)
+## Future direction (exploratory, no commitment)
 
-- **Runbook → ScreenConnect BackStage script push.** When SC's deep-link launcher lands and hosted multi-tenant reach lets a runbook step `@sc:<script-id>` fire a script against the linked asset's endpoint.
-- **Runbook → Action1 script push.** Same idea, gated on A1 surfacing a partner-accessible deploy API.
-
-Both extend the existing `@canned:` syntax with `@sc:` / `@action1:` tokens. State capture (stdout / stderr) per step.
+The runbook step format could in principle extend beyond manual checkboxes and canned pills — running a ScreenConnect BackStage script or an Action1 deployment against the ticket's linked asset and capturing stdout/stderr back into the step. Both are blocked on vendor capabilities (SC deep-link reach + multi-tenant story; A1 surfacing a partner-accessible deploy API). Tracked under exploratory items on the app `ROADMAP.md`; no commitment to any specific release.

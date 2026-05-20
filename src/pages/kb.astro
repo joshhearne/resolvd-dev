@@ -24,9 +24,19 @@ const ticketSurfaces = [
   { title: "Promote-to-KB",          body: "Drafts a new article seeded from the ticket's title + description + resolution_summary, with a `kind='system'` link back to the source ticket." },
   { title: "Resolution summary nudge", body: "At close time, a small prompt asks the closer to capture a one-line resolution summary. Drives the new \"Fix applied\" filter on the ticket list (`resolution_summary IS NOT NULL OR kb_link EXISTS`)." },
 ];
+
+const agentOnlyRules = [
+  { who: "Read",                  rule: "Project handlers only — global Admin / Manager / Tech, or any project member with a handler role override or Agent flag on the article's project." },
+  { who: "List + search",         rule: "Filtered out for non-handlers. 404 on direct slug fetch — keeps the slug invisible rather than leaking via 403." },
+  { who: "Edit",                  rule: "Same gate as read. Tech / Manager with project-handler access can rewrite freely." },
+  { who: "Tag aggregation",       rule: "Agent-only tags excluded from the global tag chip row so topic hints don't leak to unprivileged users." },
+  { who: "Ticket suggestion + links", rule: "Hidden for non-handlers in the Resolution tab ranker and the ticket↔KB link list." },
+  { who: "Delete",                rule: "Admin only. Tech / Manager handlers can read + write but can't delete an agent-only article." },
+];
+
 ---
 
-<Layout title="Knowledge Base — Resolvd" description="Per-project knowledge base with a BlockNote rich editor, version history, ticket↔article linking, pg_trgm suggestion ranker, and one-click Promote-to-KB from any resolved ticket.">
+<Layout title="Knowledge Base — Resolvd" description="Per-project knowledge base with a BlockNote rich editor, version history, ticket↔article linking, pg_trgm suggestion ranker, one-click Promote-to-KB, agent-only visibility tier, and runbook articles that drive checklists on tickets with canned-response pills.">
   <section class="relative overflow-hidden">
     <div class="mx-auto max-w-4xl px-6 pt-20 pb-12 md:pt-28">
       <span class="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1 text-xs text-[var(--color-fg-muted)]">
@@ -136,6 +146,83 @@ const ticketSurfaces = [
             <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed" set:html={s.body.replace(/`([^`]+)`/g, '<code class="text-xs px-1 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">$1</code>')}></p>
           </div>
         ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="grid md:grid-cols-2 gap-12 items-start">
+        <div>
+          <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Agent-only articles</span>
+          <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">Some docs <span class="text-[var(--color-brand)]">stay backstage</span>.</h2>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            Flip a single <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">agent_only</code> flag and the article disappears from listings, suggestions, and ticket links for anyone who isn't a project handler. Same gate as the Notes feature — global Admin / Manager / Tech, or a project member with a handler role override / Agent flag on that project.
+          </p>
+          <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+            For the "vault" docs: vendor credentials, bypass procedures, the printer reset codes the keyboard-warriors don't need.
+          </p>
+        </div>
+        <div class="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] divide-y divide-[var(--color-border)]">
+          {agentOnlyRules.map(r => (
+            <div class="px-5 py-3 flex flex-col md:flex-row md:items-start gap-1 md:gap-3">
+              <span class="font-mono text-xs text-[var(--color-brand)] md:mt-0.5 md:shrink-0 md:min-w-[18ch]">{r.who}</span>
+              <p class="text-sm text-[var(--color-fg-muted)] leading-relaxed md:flex-1">{r.rule}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-[var(--color-border)]">
+    <div class="mx-auto max-w-5xl px-6 py-20">
+      <div class="max-w-2xl">
+        <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Runbooks</span>
+        <h2 class="mt-2 text-3xl md:text-4xl font-bold tracking-tight">A checklist with <span class="text-[var(--color-brand)]">muscle memory baked in</span>.</h2>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          A <strong>runbook</strong> is a KB article with <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">kind='runbook'</code>. Same editor, same versioning, same agent-only flag. The difference is rendered on the ticket: a Runbook tab carries the checklist, with persistent state per ticket — not per user. Hand off mid-incident and the next handler picks up at the unchecked box where you stopped.
+        </p>
+        <p class="mt-4 text-[var(--color-fg-muted)] leading-relaxed">
+          Inline tokens <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">@canned:Vendor escalation</code> become clickable 📋 pills that prefill the comment composer with the canned response — placeholders (<code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">{`{ticket.ref}`}</code>, <code class="text-xs px-1.5 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">{`{submitter.firstName}`}</code>) already substituted server-side.
+        </p>
+      </div>
+
+      <div class="mt-10 grid md:grid-cols-5 gap-6 items-start">
+        <div class="md:col-span-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-1">
+          <div class="rounded-lg bg-[#050810] p-5 font-mono text-xs leading-relaxed text-[#cbd5e1]">
+            <div class="text-[var(--color-fg-dim)]"># VPN keepalive incident — diagnostic runbook</div>
+            <div class="mt-3">
+              <div><span class="text-emerald-300">[✓]</span> Identify symptom — confirm VPN profile, capture TCP trace<br /><span class="ml-6 text-[var(--color-fg-dim)] text-[10px]">— Devon Park · 5/10/2026</span></div>
+              <div class="mt-1.5"><span class="text-emerald-300">[✓]</span> Pull TCP keepalive trace from monitoring<br /><span class="ml-6 text-[var(--color-fg-dim)] text-[10px]">— Devon Park · 5/10/2026</span></div>
+              <div class="mt-3 text-violet-300">## Mitigate</div>
+              <div class="mt-1.5"><span class="text-[var(--color-fg-dim)]">[ ]</span> Schedule GPO revert (TCP keepalive 30 → 2 min), pilot on IT OU</div>
+              <div class="mt-1.5"><span class="text-[var(--color-fg-dim)]">[ ]</span> If vendor needs to engage Outlook side, send: <span class="inline-flex items-center gap-0.5 px-1.5 rounded bg-[var(--color-brand)]/15 text-[var(--color-brand)]">📋 Vendor escalation</span></div>
+              <div class="mt-3 text-violet-300">## Wrap up</div>
+              <div class="mt-1.5"><span class="text-[var(--color-fg-dim)]">[ ]</span> Once mitigated, post customer-facing summary: <span class="inline-flex items-center gap-0.5 px-1.5 rounded bg-[var(--color-brand)]/15 text-[var(--color-brand)]">📋 Confirm root cause</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="md:col-span-2 space-y-4">
+          <div>
+            <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Per-ticket state</span>
+            <p class="mt-2 text-sm text-[var(--color-fg-muted)] leading-relaxed">
+              Stored in <code class="text-xs px-1 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">ticket_runbook_runs</code>. Step toggles run a Postgres <code class="text-xs px-1 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">jsonb ||</code> merge so concurrent handlers don't clobber each other.
+            </p>
+          </div>
+          <div>
+            <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Author once</span>
+            <p class="mt-2 text-sm text-[var(--color-fg-muted)] leading-relaxed">
+              BlockNote check-list-item blocks. Use the bracketed form <code class="text-xs px-1 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">@canned:[Title]</code> for mid-line pills; bare form for end-of-step.
+            </p>
+          </div>
+          <div>
+            <span class="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] font-semibold">Audit trail</span>
+            <p class="mt-2 text-sm text-[var(--color-fg-muted)] leading-relaxed">
+              Each box records who ticked it + when. Reset wipes a single run; Mark complete stamps <code class="text-xs px-1 py-0.5 rounded bg-[var(--color-surface-2)] text-[var(--color-brand)]">completed_at</code> so handoffs can see the run was finished, not abandoned.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
