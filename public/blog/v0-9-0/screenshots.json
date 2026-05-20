@@ -1,0 +1,73 @@
+{
+  "_comment": "Blog screenshot plan for v0.9.0 — runbooks, agent-only KB, label printer, custody log, consumables. Shot against demo :8091 as the seeded admin.",
+  "baseURL": "http://localhost:8091",
+  "viewport": { "width": 1440, "height": 900 },
+  "deviceScaleFactor": 2,
+  "auth": {
+    "url": "/login",
+    "steps": [
+      { "fill":       "input[type=email]",    "value": "${DEMO_EMAIL}" },
+      { "fill":       "input[type=password]", "value": "${DEMO_PASSWORD}" },
+      { "wait": 1100 },
+      { "press":      "Enter" },
+      { "waitForURL": "**/dashboard" },
+      { "waitFor":    "h1" }
+    ]
+  },
+  "shots": [
+    {
+      "name": "runbook-ticket",
+      "url": "/tickets/1",
+      "viewport": { "width": 1440, "height": 1100 },
+      "actions": [
+        { "waitFor": "h1, h2" },
+        { "wait": 700 },
+        { "click": "button:has-text('Runbook'):not(:has-text('Notes'))" },
+        { "waitFor": "button:has-text('+ Start a runbook'), button:has-text('Reset')" },
+        { "wait": 500 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "agent-only-article",
+      "url": "/kb/1",
+      "actions": [
+        { "waitFor": "h1" },
+        { "wait": 700 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "admin-label-printer",
+      "url": "/admin/label-printer",
+      "actions": [
+        { "waitFor": "h1, h2" },
+        { "wait": 700 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "asset-detail-custody",
+      "url": "/inventory",
+      "viewport": { "width": 1440, "height": 1100 },
+      "actions": [
+        { "waitFor": "h1:has-text('Inventory')" },
+        { "wait": 600 },
+        { "eval": "[...document.querySelectorAll('td, a, button')].find(n => /ACME-MAY-LT01/i.test(n.textContent.trim()))?.closest('tr')?.click() || (location.href = '/inventory/1')" },
+        { "wait": 1200 },
+        { "eval": "[...document.querySelectorAll('h2, h3, div')].find(n => /Custody|Checkout|Check-out/i.test(n.textContent.trim()))?.scrollIntoView({block:'center'})" },
+        { "wait": 400 }
+      ],
+      "fullPage": false
+    },
+    {
+      "name": "consumables-list",
+      "url": "/consumables",
+      "actions": [
+        { "waitFor": "h1" },
+        { "wait": 700 }
+      ],
+      "fullPage": false
+    }
+  ]
+}
